@@ -8,6 +8,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -15,6 +16,8 @@ import com.aware.Accelerometer;
 import com.aware.Applications;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
+import com.aware.Gyroscope;
+import com.aware.providers.Accelerometer_Provider;
 
 import java.security.acl.AclEntry;
 
@@ -34,12 +37,20 @@ public class MainActivity extends AppCompatActivity {
         Aware.setSetting(this, Aware_Preferences.STATUS_APPLICATIONS, true);
         Applications.isAccessibilityServiceActive(getApplicationContext());
 
-        // Aware framework
-         //   Aware.startAWARE(context);
-            Aware.setSetting(context, Aware_Preferences.FREQUENCY_ACCELEROMETER, 200000);
-            Aware.setSetting(context, Aware_Preferences.THRESHOLD_ACCELEROMETER, 0.02f);
+        // Configure parameters of the accelerometer
+        Aware.setSetting(context, Aware_Preferences.FREQUENCY_ACCELEROMETER, 200000);
+        Aware.setSetting(context, Aware_Preferences.THRESHOLD_ACCELEROMETER, 0.02f);
 
-            Aware.startAccelerometer(this);
+        // Start accelerometer service
+        Aware.startAccelerometer(this);
+
+        // Set a observer to accelerometer (listener) that sees changes
+        Accelerometer.setSensorObserver(new Accelerometer.AWARESensorObserver() {
+            @Override
+            public void onAccelerometerChanged(ContentValues data) {
+                Log.d("TAG", data.toString());
+            }
+        });
 
     }
 }
