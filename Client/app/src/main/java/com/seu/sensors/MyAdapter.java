@@ -48,7 +48,9 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     public void onBindViewHolder(ViewHolder holder, int position) {
         holder.image.setImageResource(sensorList.get(position).getImage());
         holder.text.setText(sensorList.get(position).getName());
-
+        if(sensorList.get(position).getState()) {
+            holder.view.setBackgroundColor(holder.view.getResources().getColor(R.color.colorAccent));
+        }
         holder.bind(sensorList.get(position) , listener);
     }
 
