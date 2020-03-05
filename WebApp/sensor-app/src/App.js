@@ -1,28 +1,39 @@
-import React from 'react';
+import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
+import CanvasJSReact from './assets/canvasjs.react';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+var CanvasJS = CanvasJSReact.CanvasJS;
+var CanvasJSChart = CanvasJSReact.CanvasJSChart;
+
+class App extends Component {	
+  render() {
+    const options = {
+      title: {
+        text: "Basic Column Chart in React"
+      },
+      data: [{				
+                type: "column",
+                dataPoints: [
+                    { label: "Apple",  y: 10  },
+                    { label: "Orange", y: 15  },
+                    { label: "Banana", y: 25  },
+                    { label: "Mango",  y: 30  },
+                    { label: "Grape",  y: 28  }
+                ]
+       }]
+   }
+		
+   return (
+      <div>
+        <CanvasJSChart options = {options}
+            /* onRef = {ref => this.chart = ref} */
+        />
+      </div>
+    );
+  }
 }
 
 export default App;
