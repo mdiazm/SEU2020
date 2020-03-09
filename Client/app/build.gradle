@@ -33,4 +33,7 @@ dependencies {
 
     api 'com.github.denzilferreira:aware-client:master-SNAPSHOT'
 
+    ///> MQTT configuration
+    compileOnly 'com.google.android.things:androidthings:0.1-devpreview'
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2'
 }

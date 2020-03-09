@@ -21,6 +21,7 @@ import com.aware.Applications;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.Gyroscope;
+import com.aware.Mqtt;
 import com.aware.providers.Accelerometer_Provider;
 
 import java.security.acl.AclEntry;
@@ -34,18 +35,16 @@ public class MainActivity extends AppCompatActivity {
     private MyAdapter mAdapter;
     ArrayList<Sensor> arrayList = new ArrayList<>();
 
+    private MQTT mqtt;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         //Volvemos al tema por defecto de la app
         setTheme(R.style.AppTheme);
-
         setContentView(R.layout.activity_main);
 
-        Context context = getApplicationContext();
-
-        AddSensorsItems();
 
         // Aware framework
         Intent aware = new Intent(this, Aware.class);
@@ -53,24 +52,14 @@ public class MainActivity extends AppCompatActivity {
         Aware.startAWARE(this);
         Aware.setSetting(this, Aware_Preferences.STATUS_APPLICATIONS, true);
         Applications.isAccessibilityServiceActive(getApplicationContext());
+        ///> Añadir los datos de los sensores
+        AddSensorsItems();
 
-        // Configure parameters of the accelerometer
-        Aware.setSetting(context, Aware_Preferences.FREQUENCY_ACCELEROMETER, 200000);
-        Aware.setSetting(context, Aware_Preferences.THRESHOLD_ACCELEROMETER, 0.02f);
-
-        // Start accelerometer service
-        Aware.startAccelerometer(this);
-
-        // Set a observer to accelerometer (listener) that sees changes
-        Accelerometer.setSensorObserver(new Accelerometer.AWARESensorObserver() {
-            @Override
-            public void onAccelerometerChanged(ContentValues data) {
-                Log.d("TAG", data.toString());
-            }
-        });
-
+        ///> Guardar los datos de los sensores
         GuardarDatos();
 
+        mqtt = new MQTT("192.168.72.69");
+          mqtt.init();
     }
 
     public void AddSensorsItems(){
@@ -81,8 +70,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
 
-        if(!save) {
-            System.out.println("de cero");
+        if(!save) { ///> Inicializar los datos con los por defecto (primera ejecución)
+
             arrayList.add(new Sensor("Giroscopio", true, R.drawable.ic_action_gyroscope, "giroscopio", this));
             ///> Giroscopio
             Aware.setSetting(this, Aware_Preferences.FREQUENCY_GYROSCOPE, 200000);
@@ -111,8 +100,8 @@ public class MainActivity extends AppCompatActivity {
             arrayList.add(new Sensor("Batería", false, R.drawable.ic_action_battery, "bateria", this));
             arrayList.add(new Sensor("Barómetro", false, R.drawable.ic_action_barometer, "barometro", this));
             arrayList.add(new Sensor("MQTT", false, R.drawable.ic_action_communication, "mqtt" ,this));
-        }else{
-            System.out.println("restore");
+
+        }else{ ///> Inicializar los datos con los valores almacenados
 
             boolean item = myPreferences.getBoolean("giroscopio", false);
 
@@ -200,6 +189,8 @@ public class MainActivity extends AppCompatActivity {
             arrayList.add(new Sensor("MQTT", item, R.drawable.ic_action_communication, "mqtt", this));
 
         }
+
+        ///> Agregar el adapter al recycler view
         mAdapter = new MyAdapter(arrayList, new MyAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(String item, int position) {
@@ -208,6 +199,10 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(mAdapter);
     }
 
+    /**
+     *
+     *
+     **/
     public void GuardarDatos(){
         SharedPreferences myPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         SharedPreferences.Editor editor = myPreferences.edit();
@@ -231,6 +226,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onPause(){
         super.onPause();
+
+        ///> Guardar los datos de los sensores antes de pasar a segundo plano
         GuardarDatos();
     }
 
