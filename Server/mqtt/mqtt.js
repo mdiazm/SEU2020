@@ -3,7 +3,7 @@
  */
 
 const mqtt = require('mqtt');
-const database = require('./database')
+const database = require('../database/database')
 var client = mqtt.connect('tcp://localhost'); // MQTT Broker url (via TCP)
 
 // Possible actions
