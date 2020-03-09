@@ -126,6 +126,7 @@ module.exports.Models = {
 function insertData(data){
     data.save((err, item) => {
         if(err) return console.error(err);
+        console.log(item);
     })
 }
 

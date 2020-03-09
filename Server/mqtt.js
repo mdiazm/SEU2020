@@ -56,7 +56,7 @@ client.on('message', (topic, message) => {
         case Sensors.ACCELEROMETER: 
             var values = new Models.Accelerometer({
                 device: json.device,
-                timestamp: new Date(json.timestamp),
+                timestamp: new Date(parseInt(json.timestamp)),
                 x: json.x,
                 y: json.y,
                 z: json.z
@@ -70,7 +70,7 @@ client.on('message', (topic, message) => {
         case Sensors.GYROSCOPE:
             var values = new Models.Gyroscope({
                 device: json.device,
-                timestamp: new Date(json.timestamp),
+                timestamp: new Date(parseInt(json.timestamp)),
                 x: json.x,
                 y: json.y,
                 z: json.z
@@ -83,7 +83,7 @@ client.on('message', (topic, message) => {
         case Sensors.GPS:
             var values = new Models.GPS({
                 device: json.device,
-                timestamp: new Date(json.timestamp),
+                timestamp: new Date(parseInt(json.timestamp)),
                 latitude: json.latitude,
                 longitude: json.longitude,
                 bearing: json.bearing,
@@ -99,7 +99,7 @@ client.on('message', (topic, message) => {
         case Sensors.LIGHT:
             var values = new Models.Light({
                 device: json.device,
-                timestamp: new Date(json.timestamp),
+                timestamp: new Date(parseInt(json.timestamp)),
                 lux: json.lux
             });
             // Insert data in the database
@@ -109,7 +109,7 @@ client.on('message', (topic, message) => {
         case Sensors.PROXIMITY:
             var values = new Models.Proximity({
                 device: json.device,
-                timestamp: new Date(json.timestamp),
+                timestamp: new Date(parseInt(json.timestamp)),
                 proximity: json.proximity
             });
             // Insert data in the database
@@ -119,7 +119,7 @@ client.on('message', (topic, message) => {
         case Sensors.BATTERY:
             var values = new Models.Battery({
                 device: json.device,
-                timestamp: new Date(json.timestamp),
+                timestamp: new Date(parseInt(json.timestamp)),
                 level: json.level,
                 scale: json.scale,
                 voltage: json.voltage,
