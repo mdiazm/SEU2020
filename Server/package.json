@@ -1,0 +1,17 @@
+{
+  "name": "sensors",
+  "version": "1.0.0",
+  "description": "REST API for Sensors application of Embedded and Ubiquitous Systems",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "mdmedina",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "mongoose": "^5.9.3",
+    "mqtt": "^3.0.0"
+  }
+}

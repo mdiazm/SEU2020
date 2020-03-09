@@ -21,10 +21,7 @@ import com.aware.Applications;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
 import com.aware.Gyroscope;
-import com.aware.Light;
-import com.aware.Temperature;
 import com.aware.providers.Accelerometer_Provider;
-import com.aware.providers.Gyroscope_Provider;
 
 import java.security.acl.AclEntry;
 import java.util.ArrayList;
@@ -57,37 +54,18 @@ public class MainActivity extends AppCompatActivity {
         Aware.setSetting(this, Aware_Preferences.STATUS_APPLICATIONS, true);
         Applications.isAccessibilityServiceActive(getApplicationContext());
 
-        ///> Inicializar los observadores de los sensores
+        // Configure parameters of the accelerometer
+        Aware.setSetting(context, Aware_Preferences.FREQUENCY_ACCELEROMETER, 200000);
+        Aware.setSetting(context, Aware_Preferences.THRESHOLD_ACCELEROMETER, 0.02f);
+
+        // Start accelerometer service
+        Aware.startAccelerometer(this);
+
+        // Set a observer to accelerometer (listener) that sees changes
         Accelerometer.setSensorObserver(new Accelerometer.AWARESensorObserver() {
             @Override
             public void onAccelerometerChanged(ContentValues data) {
-                String x = Accelerometer_Provider.Accelerometer_Data.VALUES_0;
-                String y = Accelerometer_Provider.Accelerometer_Data.VALUES_1;
-                String z = Accelerometer_Provider.Accelerometer_Data.VALUES_2;
-                System.out.println(x + " , " + y + " , " + z);
-                Log.d("datass", data.toString());
-            }
-        });
-
-        Gyroscope.setSensorObserver(new Gyroscope.AWARESensorObserver() {
-        @Override
-        public void onGyroscopeChanged(ContentValues data) {
-                    Log.d("datass", data.toString());
-                }
-            });
-
-
-        Light.setSensorObserver(new Light.AWARESensorObserver() {
-            @Override
-            public void onLightChanged(ContentValues data) {
-                Log.d("datass", data.toString());
-            }
-        });
-
-        Temperature.setSensorObserver(new Temperature.AWARESensorObserver() {
-            @Override
-            public void onTemperatureChanged(ContentValues data) {
-                Log.d("datass", data.toString());
+                Log.d("TAG", data.toString());
             }
         });
 
