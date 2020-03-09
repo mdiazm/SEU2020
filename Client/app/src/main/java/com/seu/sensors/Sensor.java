@@ -1,30 +1,23 @@
 package com.seu.sensors;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.util.Log;
-
-import com.aware.Accelerometer;
 import com.aware.Aware;
-import com.aware.Aware_Preferences;
-import com.aware.Gyroscope;
-import com.aware.Light;
-import com.aware.Temperature;
-import com.aware.providers.Accelerometer_Provider;
 
 public class Sensor {
 
     private String name;
     private boolean state;
     private int image;
+    private String key;
 
     Context context;
 
-    public Sensor(String name, boolean state, int image, Context c){
+    public Sensor(String name, boolean state, int image, String key, Context c){
         this.name = name;
         this.state = state;
         this.image = image;
         this.context = c;
+        this.key = key;
     }
 
     public String getName() {
@@ -37,7 +30,6 @@ public class Sensor {
 
     public void setState(boolean state) {
         if(state){
-
             if(name == "Acelerómetro") {
                 ///> Acelerómetro
                 Aware.startAccelerometer(context);
@@ -80,4 +72,19 @@ public class Sensor {
         return image;
     }
 
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    public void setContext(Context context) {
+        this.context = context;
+    }
 }

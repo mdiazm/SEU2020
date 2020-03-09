@@ -1,5 +1,7 @@
 package com.seu.sensors;
 
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,7 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
     public interface OnItemClickListener {
-        void onItemClick(String item);
+        void onItemClick(String item, int position);
     }
 
     private List<Sensor> sensorList = new ArrayList<>();
@@ -51,7 +53,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         if(sensorList.get(position).getState()) {
             holder.view.setBackgroundColor(holder.view.getResources().getColor(R.color.colorAccent));
         }
-        holder.bind(sensorList.get(position) , listener);
+        holder.bind(sensorList.get(position), position, listener);
     }
 
     @Override
@@ -71,11 +73,11 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
         }
 
-        public void bind(final Sensor item,  final OnItemClickListener listener) {
+        public void bind(final Sensor item, final int position,  final OnItemClickListener listener) {
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    System.out.println(item.getName());
+                    System.out.println(item.getName() + " "  + position);
                     if (item.getState()) {
                         view.setBackgroundColor(view.getResources().getColor(R.color.card));
                     } else {
