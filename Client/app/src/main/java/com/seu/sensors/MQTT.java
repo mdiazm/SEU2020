@@ -14,6 +14,8 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 public class MQTT implements MqttCallback {
 
     private String ip;
+    private MqttClient client ;
+    private String send_topic;
     public MQTT(String ip){
         this.ip = ip;
     }
@@ -21,12 +23,12 @@ public class MQTT implements MqttCallback {
     public void init(){
         try {
             Log.d("MQTT", "intentando");
-            MqttClient client = new MqttClient("tcp://" + ip + ":1883", "", new MemoryPersistence());
+            this.client = new MqttClient("tcp://" + ip + ":1883", "", new MemoryPersistence());
             client.setCallback( this);
             client.connect();
-            String topic = "sensors/send/accelerometer";
-            client.subscribe(topic);
-            Log.d("MQTT", topic);
+            send_topic = "sensors/send/";
+            client.subscribe(send_topic);
+            Log.d("MQTT", send_topic);
         } catch (MqttException e) {
             Log.d("MQTT", e.toString());
             e.printStackTrace();
@@ -47,5 +49,15 @@ public class MQTT implements MqttCallback {
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
         Log.d("MQTT", "deliveryComplete");
+    }
+
+    public void sendMessage(String sensor, MqttMessage message){
+        try {
+
+            client.publish(send_topic + sensor, message);
+
+        }catch (MqttException e){
+            e.printStackTrace();
+        }
     }
 }

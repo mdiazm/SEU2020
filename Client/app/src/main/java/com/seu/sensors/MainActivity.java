@@ -20,9 +20,23 @@ import com.aware.Accelerometer;
 import com.aware.Applications;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
+import com.aware.Barometer;
+import com.aware.Battery;
 import com.aware.Gyroscope;
+import com.aware.Light;
+import com.aware.Locations;
 import com.aware.Mqtt;
+import com.aware.Proximity;
 import com.aware.providers.Accelerometer_Provider;
+import com.aware.providers.Barometer_Provider;
+import com.aware.providers.Battery_Provider;
+import com.aware.providers.Gyroscope_Provider;
+import com.aware.providers.Light_Provider;
+import com.aware.providers.Locations_Provider;
+import com.aware.providers.Proximity_Provider;
+
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.json.JSONObject;
 
 import java.security.acl.AclEntry;
 import java.util.ArrayList;
@@ -52,15 +66,226 @@ public class MainActivity extends AppCompatActivity {
         Aware.startAWARE(this);
         Aware.setSetting(this, Aware_Preferences.STATUS_APPLICATIONS, true);
         Applications.isAccessibilityServiceActive(getApplicationContext());
+
         ///> Añadir los datos de los sensores
         AddSensorsItems();
+
+
+        ///> Inicializar los observadores de los sensores
+        InitListener();
 
         ///> Guardar los datos de los sensores
         GuardarDatos();
 
-        mqtt = new MQTT("192.168.72.69");
+        mqtt = new MQTT("192.168.2.1");
           mqtt.init();
     }
+
+    public void InitListener(){
+        Accelerometer.setSensorObserver(new Accelerometer.AWARESensorObserver() {
+            @Override
+            public void onAccelerometerChanged(ContentValues data) {
+                String x = data.get(Accelerometer_Provider.Accelerometer_Data.VALUES_0).toString();
+                String y = data.get(Accelerometer_Provider.Accelerometer_Data.VALUES_1).toString();
+                String z = data.get(Accelerometer_Provider.Accelerometer_Data.VALUES_2).toString();
+                String device = data.get(Accelerometer_Provider.Accelerometer_Data.DEVICE_ID).toString();
+                String timestamp = data.get( Accelerometer_Provider.Accelerometer_Data.TIMESTAMP).toString();
+
+                try {
+                    JSONObject json = new JSONObject();
+                    json.put("device", device);
+                    json.put("timestamp", timestamp);
+                    json.put("x", x);
+                    json.put("y", y);
+                    json.put("z", z);
+
+                    mqtt.sendMessage("accelerometer", new MqttMessage(json.toString().getBytes()));
+
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }
+        });
+
+        Gyroscope.setSensorObserver(new Gyroscope.AWARESensorObserver() {
+            @Override
+            public void onGyroscopeChanged(ContentValues data) {
+                String x = data.get(Gyroscope_Provider.Gyroscope_Data.VALUES_0).toString();
+                String y = data.get(Gyroscope_Provider.Gyroscope_Data.VALUES_1).toString();
+                String z = data.get(Gyroscope_Provider.Gyroscope_Data.VALUES_2).toString();
+                String device = data.get(Gyroscope_Provider.Gyroscope_Data.DEVICE_ID).toString();
+                String timestamp = data.get(Gyroscope_Provider.Gyroscope_Data.TIMESTAMP).toString();
+
+                try {
+                    JSONObject json = new JSONObject();
+                    json.put("device", device);
+                    json.put("timestamp", timestamp);
+                    json.put("x", x);
+                    json.put("y", y);
+                    json.put("z", z);
+
+                    mqtt.sendMessage("gyroscope", new MqttMessage(json.toString().getBytes()));
+
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }
+        });
+
+
+        Locations.setSensorObserver(new Locations.AWARESensorObserver() {
+            @Override
+            public void onLocationChanged(ContentValues data) {
+
+                try {
+                    JSONObject json = new JSONObject();
+                    String device = data.getAsString(Locations_Provider.Locations_Data.DEVICE_ID);
+                    String timestamp = data.getAsString(Locations_Provider.Locations_Data.TIMESTAMP);
+                    String latitude = data.getAsString(Locations_Provider.Locations_Data.LATITUDE);
+                    String longitude = data.getAsString(Locations_Provider.Locations_Data.LONGITUDE);
+                    String bearing = data.getAsString(Locations_Provider.Locations_Data.BEARING);
+                    String speed = data.getAsString(Locations_Provider.Locations_Data.SPEED);
+                    String altitude = data.getAsString(Locations_Provider.Locations_Data.ALTITUDE);
+                    String provider = data.getAsString(Locations_Provider.Locations_Data.PROVIDER);
+                    String accuracy = data.getAsString(Locations_Provider.Locations_Data.ACCURACY);
+
+                    json.put("device", device);
+                    json.put("timestamp", timestamp);
+                    json.put("latitude", latitude);
+                    json.put("longitude", longitude);
+                    json.put("bearing", bearing);
+                    json.put("speed", speed);
+                    json.put("provider", provider);
+                    json.put("altitude", altitude);
+                    json.put("accuracy", accuracy);
+
+                    mqtt.sendMessage("gps", new MqttMessage(json.toString().getBytes()));
+
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        Light.setSensorObserver(new Light.AWARESensorObserver() {
+            @Override
+            public void onLightChanged(ContentValues data) {
+                String lux = data.get(Light_Provider.Light_Data.LIGHT_LUX).toString();
+                String device = data.get(Gyroscope_Provider.Gyroscope_Data.DEVICE_ID).toString();
+                String timestamp = data.get(Gyroscope_Provider.Gyroscope_Data.TIMESTAMP).toString();
+
+                try {
+                    JSONObject json = new JSONObject();
+                    json.put("device", device);
+                    json.put("timestamp", timestamp);
+                    json.put("lux", lux);
+
+                    mqtt.sendMessage("light", new MqttMessage(json.toString().getBytes()));
+
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }
+        });
+
+        Proximity.setSensorObserver(new Proximity.AWARESensorObserver() {
+            @Override
+            public void onProximityChanged(ContentValues data) {
+                String device = data.getAsString(Proximity_Provider.Proximity_Data.DEVICE_ID);
+                String timestamp = data.getAsString(Proximity_Provider.Proximity_Data.TIMESTAMP);
+                String proximity = data.getAsString(Proximity_Provider.Proximity_Data.PROXIMITY);
+                try {
+                    JSONObject json = new JSONObject();
+                    json.put("device", device);
+                    json.put("timestamp", timestamp);
+                    json.put("proximity", proximity);
+
+                    mqtt.sendMessage("proximity", new MqttMessage(json.toString().getBytes()));
+
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }
+        });
+
+        Battery.setSensorObserver(new Battery.AWARESensorObserver() {
+            @Override
+            public void onBatteryChanged(ContentValues data) {
+                String device = data.getAsString(Battery_Provider.Battery_Data.DEVICE_ID);
+                String timestamp = data.getAsString(Battery_Provider.Battery_Data.TIMESTAMP);
+                String level = data.getAsString(Battery_Provider.Battery_Data.LEVEL);
+                String scale = data.getAsString(Battery_Provider.Battery_Data.SCALE);
+                String voltage = data.getAsString(Battery_Provider.Battery_Data.VOLTAGE);
+                String temperature = data.getAsString(Battery_Provider.Battery_Data.TEMPERATURE);
+
+                try {
+                    JSONObject json = new JSONObject();
+                    json.put("device", device);
+                    json.put("timestamp", timestamp);
+                    json.put("level", level);
+                    json.put("scale", scale);
+                    json.put("voltage", voltage);
+                    json.put("temperature", temperature);
+
+                    mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
+
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onPhoneReboot() {
+
+            }
+
+            @Override
+            public void onPhoneShutdown() {
+
+            }
+
+            @Override
+            public void onBatteryLow() {
+
+            }
+
+            @Override
+            public void onBatteryCharging() {
+
+            }
+
+            @Override
+            public void onBatteryDischarging() {
+
+            }
+        });
+
+        Barometer.setSensorObserver(new Barometer.AWARESensorObserver() {
+            @Override
+            public void onBarometerChanged(ContentValues data) {
+                String device = data.getAsString(Barometer_Provider.Barometer_Data.DEVICE_ID);
+                String timestamp = data.getAsString(Barometer_Provider.Barometer_Data.TIMESTAMP);
+                String value = data.getAsString(Barometer_Provider.Barometer_Data.AMBIENT_PRESSURE);
+
+                try {
+                    JSONObject json = new JSONObject();
+                    json.put("device", device);
+                    json.put("timestamp", timestamp);
+                    json.put("value", value);
+
+                    mqtt.sendMessage("barometer", new MqttMessage(json.toString().getBytes()));
+
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
 
     public void AddSensorsItems(){
         SharedPreferences myPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
