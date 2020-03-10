@@ -1,6 +1,12 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link
+} from "react-router-dom";
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import CanvasJSReact from './assets/canvasjs.react';
@@ -30,10 +36,10 @@ class SideBar extends Component {
             <div class="sidebar-sticky">
               <ul class="nav flex-column">
                 <li class="nav-item">
+                  <Link to="/" class="nav-link">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home"></svg>
-                  <a class="nav-link active" href="#">
-                    Inicio <span class="sr-only">(current)</span>
-                  </a>
+                    Inicio
+                  </Link>
                 </li>
               </ul>
 
@@ -42,22 +48,22 @@ class SideBar extends Component {
               </h6>
               <ul class="nav flex-column mb-2">
                 <li class="nav-item">
-                  <a class="nav-link" href="#">
+                  <Link to="/acelerometro" class="nav-link">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home"></svg>
                     Acelerómetro
-                  </a>
+                  </Link>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" href="#">
+                  <Link to="/giroscopio" class="nav-link">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home"></svg>
                     Giroscopio
-                  </a>
+                  </Link>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" href="#">
+                  <Link to="/acelerometro" class="nav-link">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home"></svg>
                     Luminosidad
-                  </a>
+                  </Link>
                 </li>
               </ul>
               
@@ -152,7 +158,22 @@ class Main extends Component {
 class App extends Component {	
   render() {
     return(
-      <Main />
+      <Router>
+        <Switch>
+          <Route exact path="/">
+            <Main />
+          </Route>
+          <Route exact path="/acelerometro">
+            <h1>ACELERÓMETRO</h1>
+          </Route>
+          <Route exact path="/giroscopio">
+            <h1>GIROSCOPIO</h1>
+          </Route>
+          <Route exact path="/luminosidad">
+            <h1>LUMINOSIDAD</h1>
+          </Route>
+        </Switch>
+      </Router>
     )
   }
 }
