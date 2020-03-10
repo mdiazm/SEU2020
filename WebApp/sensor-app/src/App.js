@@ -30,6 +30,7 @@ class SideBar extends Component {
             <div class="sidebar-sticky">
               <ul class="nav flex-column">
                 <li class="nav-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home"></svg>
                   <a class="nav-link active" href="#">
                     Inicio <span class="sr-only">(current)</span>
                   </a>
@@ -42,16 +43,19 @@ class SideBar extends Component {
               <ul class="nav flex-column mb-2">
                 <li class="nav-item">
                   <a class="nav-link" href="#">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home"></svg>
                     Acelerómetro
                   </a>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="#">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home"></svg>
                     Giroscopio
                   </a>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="#">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home"></svg>
                     Luminosidad
                   </a>
                 </li>
@@ -60,7 +64,7 @@ class SideBar extends Component {
             </div>
           </nav>
           <div class="col-md-10">
-          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom px-2 py-2">
             <h1 class="h2">Inicio</h1>
             <div class="btn-toolbar mb-2 mb-md-0">
               <div class="btn-group mr-2">
