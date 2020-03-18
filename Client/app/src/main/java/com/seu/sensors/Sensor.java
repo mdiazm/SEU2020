@@ -2,6 +2,7 @@ package com.seu.sensors;
 
 import android.content.Context;
 import com.aware.Aware;
+import com.aware.Aware_Preferences;
 
 public class Sensor {
 
@@ -36,14 +37,20 @@ public class Sensor {
             }else if(name == "Giroscopio") {
                 ///> Giroscopio
                 Aware.startGyroscope(context);
-
             }else if(name == "Luminosidad") {
                 ///> Luminosidad
                  Aware.startLight(context);
-
             }else if(name == "Temperatura") {
                 ///> Temperatura
                 Aware.startTemperature(context);
+            }else if(name == "Batería"){
+                Aware.startBattery(context);
+            }else if(name == "GPS"){
+                Aware.startLocations(context);
+            }else if(name == "Proximidad"){
+                Aware.startProximity(context);
+            }else if(name == "Barómetro"){
+                Aware.startBarometer(context);
             }
         }else{
             if(name == "Acelerómetro") {
@@ -54,6 +61,14 @@ public class Sensor {
                 Aware.stopLight(context);
             }else if(name == "Temperatura") {
                 Aware.stopTemperature(context);
+            }else if(name == "Batería"){
+                Aware.stopBattery(context);
+            }else if(name == "GPS"){
+                Aware.stopLocations(context);
+            }else if(name =="Proximidad"){
+                Aware.stopProximity(context);
+            }else if(name == "Barómetro"){
+                Aware.stopBarometer(context);
             }
         }
 
@@ -87,4 +102,5 @@ public class Sensor {
     public void setContext(Context context) {
         this.context = context;
     }
+
 }

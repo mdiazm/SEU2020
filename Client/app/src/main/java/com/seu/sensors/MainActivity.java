@@ -27,6 +27,7 @@ import com.aware.Light;
 import com.aware.Locations;
 import com.aware.Mqtt;
 import com.aware.Proximity;
+import com.aware.Temperature;
 import com.aware.providers.Accelerometer_Provider;
 import com.aware.providers.Barometer_Provider;
 import com.aware.providers.Battery_Provider;
@@ -40,14 +41,15 @@ import org.json.JSONObject;
 
 import java.security.acl.AclEntry;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
-
+import java.lang.Math;
 
 public class MainActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
     private MyAdapter mAdapter;
-    ArrayList<Sensor> arrayList = new ArrayList<>();
+    ArrayList<Object> arrayList = new ArrayList<>();
 
     private MQTT mqtt;
 
@@ -77,36 +79,12 @@ public class MainActivity extends AppCompatActivity {
         ///> Guardar los datos de los sensores
         GuardarDatos();
 
-        mqtt = new MQTT("192.168.2.1");
-          mqtt.init();
+        //mqtt = new MQTT("10.82.197.241");
+        mqtt = new MQTT("192.168.0.14");
+        mqtt.init();
     }
 
     public void InitListener(){
-        Accelerometer.setSensorObserver(new Accelerometer.AWARESensorObserver() {
-            @Override
-            public void onAccelerometerChanged(ContentValues data) {
-                String x = data.get(Accelerometer_Provider.Accelerometer_Data.VALUES_0).toString();
-                String y = data.get(Accelerometer_Provider.Accelerometer_Data.VALUES_1).toString();
-                String z = data.get(Accelerometer_Provider.Accelerometer_Data.VALUES_2).toString();
-                String device = data.get(Accelerometer_Provider.Accelerometer_Data.DEVICE_ID).toString();
-                String timestamp = data.get( Accelerometer_Provider.Accelerometer_Data.TIMESTAMP).toString();
-
-                try {
-                    JSONObject json = new JSONObject();
-                    json.put("device", device);
-                    json.put("timestamp", timestamp);
-                    json.put("x", x);
-                    json.put("y", y);
-                    json.put("z", z);
-
-                    mqtt.sendMessage("accelerometer", new MqttMessage(json.toString().getBytes()));
-
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-
-            }
-        });
 
         Gyroscope.setSensorObserver(new Gyroscope.AWARESensorObserver() {
             @Override
@@ -117,23 +95,81 @@ public class MainActivity extends AppCompatActivity {
                 String device = data.get(Gyroscope_Provider.Gyroscope_Data.DEVICE_ID).toString();
                 String timestamp = data.get(Gyroscope_Provider.Gyroscope_Data.TIMESTAMP).toString();
 
-                try {
-                    JSONObject json = new JSONObject();
-                    json.put("device", device);
-                    json.put("timestamp", timestamp);
-                    json.put("x", x);
-                    json.put("y", y);
-                    json.put("z", z);
 
-                    mqtt.sendMessage("gyroscope", new MqttMessage(json.toString().getBytes()));
+                for(int i = 0; i< arrayList.size(); i++){
+                    if(arrayList.get(i) instanceof com.seu.sensors.Gyroscope){
+                        com.seu.sensors.Gyroscope g =(com.seu.sensors.Gyroscope) arrayList.get(i);
+                        float _x = g.getX();
+                        float _y = g.getY();
+                        float _z = g.getZ();
 
-                }catch (Exception e){
-                    e.printStackTrace();
+                        if( Math.abs(_x - Float.parseFloat(x)) > g.getOffset() ||
+                            Math.abs(_y - Float.parseFloat(y)) > g.getOffset() ||
+                            Math.abs(_z - Float.parseFloat(z)) > g.getOffset()){
+                            g.setX(Float.parseFloat(x));
+                            g.setY(Float.parseFloat(y));
+                            g.setZ(Float.parseFloat(z));
+                            arrayList.set(0, g);
+                            try {
+                                JSONObject json = new JSONObject();
+                                json.put("device", device);
+                                json.put("timestamp", timestamp);
+                                json.put("x", x);
+                                json.put("y", y);
+                                json.put("z", z);
+
+                                mqtt.sendMessage("gyroscope", new MqttMessage(json.toString().getBytes()));
+
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
+                        }
+                    }
                 }
-
             }
         });
 
+        Accelerometer.setSensorObserver(new Accelerometer.AWARESensorObserver() {
+            @Override
+            public void onAccelerometerChanged(ContentValues data) {
+                String x = data.get(Accelerometer_Provider.Accelerometer_Data.VALUES_0).toString();
+                String y = data.get(Accelerometer_Provider.Accelerometer_Data.VALUES_1).toString();
+                String z = data.get(Accelerometer_Provider.Accelerometer_Data.VALUES_2).toString();
+                String device = data.get(Accelerometer_Provider.Accelerometer_Data.DEVICE_ID).toString();
+                String timestamp = data.get( Accelerometer_Provider.Accelerometer_Data.TIMESTAMP).toString();
+
+                for(int i = 0; i< arrayList.size(); i++) {
+                    if (arrayList.get(i) instanceof com.seu.sensors.Accelerometer) {
+                        com.seu.sensors.Accelerometer g = (com.seu.sensors.Accelerometer) arrayList.get(i);
+                        float _x = g.getX();
+                        float _y = g.getY();
+                        float _z = g.getZ();
+
+                        if ((Math.abs(_x - Float.parseFloat(x)) > g.getOffset()) ||
+                                (Math.abs(_y - Float.parseFloat(y)) > g.getOffset()) ||
+                                (Math.abs(_z - Float.parseFloat(z)) > g.getOffset())){
+                            g.setY(Float.parseFloat(y));
+                            g.setZ(Float.parseFloat(z));
+                            g.setX(Float.parseFloat(x));
+                            arrayList.set(1, g);
+                            try {
+                                JSONObject json = new JSONObject();
+                                json.put("device", device);
+                                json.put("timestamp", timestamp);
+                                json.put("x", x);
+                                json.put("y", y);
+                                json.put("z", z);
+
+                                mqtt.sendMessage("accelerometer", new MqttMessage(json.toString().getBytes()));
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
         Locations.setSensorObserver(new Locations.AWARESensorObserver() {
             @Override
@@ -151,18 +187,25 @@ public class MainActivity extends AppCompatActivity {
                     String provider = data.getAsString(Locations_Provider.Locations_Data.PROVIDER);
                     String accuracy = data.getAsString(Locations_Provider.Locations_Data.ACCURACY);
 
-                    json.put("device", device);
-                    json.put("timestamp", timestamp);
-                    json.put("latitude", latitude);
-                    json.put("longitude", longitude);
-                    json.put("bearing", bearing);
-                    json.put("speed", speed);
-                    json.put("provider", provider);
-                    json.put("altitude", altitude);
-                    json.put("accuracy", accuracy);
+                    for(int i = 0; i< arrayList.size(); i++) {
+                        if (arrayList.get(i) instanceof com.seu.sensors.Locations) {
+                            com.seu.sensors.Locations g = (com.seu.sensors.Locations) arrayList.get(i);
 
-                    mqtt.sendMessage("gps", new MqttMessage(json.toString().getBytes()));
 
+                                json.put("device", device);
+                                json.put("timestamp", timestamp);
+                                json.put("latitude", latitude);
+                                json.put("longitude", longitude);
+                                json.put("bearing", bearing);
+                                json.put("speed", speed);
+                                json.put("provider", provider);
+                                json.put("altitude", altitude);
+                                json.put("accuracy", accuracy);
+
+                                mqtt.sendMessage("gps", new MqttMessage(json.toString().getBytes()));
+
+                        }
+                    }
                 }catch (Exception e){
                     e.printStackTrace();
                 }
@@ -176,16 +219,28 @@ public class MainActivity extends AppCompatActivity {
                 String device = data.get(Gyroscope_Provider.Gyroscope_Data.DEVICE_ID).toString();
                 String timestamp = data.get(Gyroscope_Provider.Gyroscope_Data.TIMESTAMP).toString();
 
-                try {
-                    JSONObject json = new JSONObject();
-                    json.put("device", device);
-                    json.put("timestamp", timestamp);
-                    json.put("lux", lux);
+                for(int i = 0; i< arrayList.size(); i++) {
+                    if (arrayList.get(i) instanceof com.seu.sensors.Light) {
+                        com.seu.sensors.Light g = (com.seu.sensors.Light) arrayList.get(i);
 
-                    mqtt.sendMessage("light", new MqttMessage(json.toString().getBytes()));
+                        if ((Math.abs(g.getX() - Float.parseFloat(lux)) > g.getOffset()) ||
+                                (Math.abs(g.getX() - Float.parseFloat(lux)) > g.getOffset()) ||
+                                (Math.abs(g.getX() - Float.parseFloat(lux)) > g.getOffset())) {
+                            g.setX(Float.parseFloat(lux));
 
-                }catch (Exception e){
-                    e.printStackTrace();
+                            try {
+                                JSONObject json = new JSONObject();
+                                json.put("device", device);
+                                json.put("timestamp", timestamp);
+                                json.put("lux", lux);
+
+                                mqtt.sendMessage("light", new MqttMessage(json.toString().getBytes()));
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
                 }
 
             }
@@ -197,18 +252,29 @@ public class MainActivity extends AppCompatActivity {
                 String device = data.getAsString(Proximity_Provider.Proximity_Data.DEVICE_ID);
                 String timestamp = data.getAsString(Proximity_Provider.Proximity_Data.TIMESTAMP);
                 String proximity = data.getAsString(Proximity_Provider.Proximity_Data.PROXIMITY);
-                try {
-                    JSONObject json = new JSONObject();
-                    json.put("device", device);
-                    json.put("timestamp", timestamp);
-                    json.put("proximity", proximity);
 
-                    mqtt.sendMessage("proximity", new MqttMessage(json.toString().getBytes()));
+                for(int i = 0; i< arrayList.size(); i++) {
+                    if (arrayList.get(i) instanceof com.seu.sensors.Proximity) {
+                        com.seu.sensors.Proximity g = (com.seu.sensors.Proximity) arrayList.get(i);
+                        if ((Math.abs(g.getProximity() - Float.parseFloat(proximity)) > g.getOffset()) ||
+                                (Math.abs(g.getProximity() - Float.parseFloat(proximity)) > g.getOffset()) ||
+                                (Math.abs(g.getProximity() - Float.parseFloat(proximity)) > g.getOffset())) {
+                            g.setProximity(Float.parseFloat(proximity));
 
-                }catch (Exception e){
-                    e.printStackTrace();
+                            try {
+                                JSONObject json = new JSONObject();
+                                json.put("device", device);
+                                json.put("timestamp", timestamp);
+                                json.put("proximity", proximity);
+
+                                mqtt.sendMessage("proximity", new MqttMessage(json.toString().getBytes()));
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
                 }
-
             }
         });
 
@@ -271,19 +337,38 @@ public class MainActivity extends AppCompatActivity {
                 String timestamp = data.getAsString(Barometer_Provider.Barometer_Data.TIMESTAMP);
                 String value = data.getAsString(Barometer_Provider.Barometer_Data.AMBIENT_PRESSURE);
 
-                try {
-                    JSONObject json = new JSONObject();
-                    json.put("device", device);
-                    json.put("timestamp", timestamp);
-                    json.put("value", value);
+                for(int i = 0; i< arrayList.size(); i++) {
+                    if (arrayList.get(i) instanceof com.seu.sensors.Barometer) {
+                        com.seu.sensors.Barometer g = (com.seu.sensors.Barometer) arrayList.get(i);
+                        if ((Math.abs(g.getValue() - Float.parseFloat(value)) > g.getOffset()) ||
+                                (Math.abs(g.getValue() - Float.parseFloat(value)) > g.getOffset()) ||
+                                (Math.abs(g.getValue() - Float.parseFloat(value)) > g.getOffset())) {
+                            g.setValue(Float.parseFloat(value));
 
-                    mqtt.sendMessage("barometer", new MqttMessage(json.toString().getBytes()));
+                            try {
+                                JSONObject json = new JSONObject();
+                                json.put("device", device);
+                                json.put("timestamp", timestamp);
+                                json.put("value", value);
 
-                }catch (Exception e){
-                    e.printStackTrace();
+                                mqtt.sendMessage("barometer", new MqttMessage(json.toString().getBytes()));
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
                 }
             }
         });
+
+        Temperature.setSensorObserver(new Temperature.AWARESensorObserver() {
+            @Override
+            public void onTemperatureChanged(ContentValues data) {
+
+            }
+        });
+
     }
 
 
@@ -297,25 +382,25 @@ public class MainActivity extends AppCompatActivity {
 
         if(!save) { ///> Inicializar los datos con los por defecto (primera ejecución)
 
-            arrayList.add(new Sensor("Giroscopio", true, R.drawable.ic_action_gyroscope, "giroscopio", this));
+            arrayList.add(new com.seu.sensors.Gyroscope("Giroscopio", true, R.drawable.ic_action_gyroscope, "giroscopio", this));
             ///> Giroscopio
             Aware.setSetting(this, Aware_Preferences.FREQUENCY_GYROSCOPE, 200000);
             Aware.setSetting(this, Aware_Preferences.THRESHOLD_GYROSCOPE, 0.02f);
             Aware.startGyroscope(this);
 
-            arrayList.add(new Sensor("Acelerómetro", true, R.drawable.ic_action_accelerometer, "acelerometro" , this));
+            arrayList.add(new com.seu.sensors.Accelerometer("Acelerómetro", true, R.drawable.ic_action_accelerometer, "acelerometro" , this));
             ///> Acelerómetro
             Aware.setSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER, 200000);
             Aware.setSetting(this, Aware_Preferences.THRESHOLD_ACCELEROMETER, 0.02f);
             Aware.startAccelerometer(this);
             arrayList.add(new Sensor("GPS", false, R.drawable.ic_action_locations, "gps", this));
             arrayList.add(new Sensor("Micrófono", false, R.drawable.ic_action_ambient_noise, "microfono", this));
-            arrayList.add(new Sensor("Luminosidad", true, R.drawable.ic_action_light, "luminosidad", this));
+            arrayList.add(new com.seu.sensors.Light("Luminosidad", true, R.drawable.ic_action_light, "luminosidad", this));
             ///> Luminosidad
             Aware.setSetting(this, Aware_Preferences.FREQUENCY_LIGHT, 200000);
             Aware.setSetting(this, Aware_Preferences.THRESHOLD_LIGHT, 0.02f);
             Aware.startLight(this);
-            arrayList.add(new Sensor("Proximidad", false, R.drawable.ic_action_proximity, "proximidad", this));
+            arrayList.add(new com.seu.sensors.Proximity("Proximidad", false, R.drawable.ic_action_proximity, "proximidad", this));
             ///> Temperatura
             Aware.setSetting(this, Aware_Preferences.FREQUENCY_TEMPERATURE, 200000);
             Aware.setSetting(this, Aware_Preferences.THRESHOLD_TEMPERATURE, 0.02f);
@@ -323,14 +408,14 @@ public class MainActivity extends AppCompatActivity {
             arrayList.add(new Sensor("Temperatura", true, R.drawable.ic_action_temperature, "temperatura", this));
             arrayList.add(new Sensor("Uso de apps", false, R.drawable.ic_action_applications, "uso_apps", this));
             arrayList.add(new Sensor("Batería", false, R.drawable.ic_action_battery, "bateria", this));
-            arrayList.add(new Sensor("Barómetro", false, R.drawable.ic_action_barometer, "barometro", this));
-            arrayList.add(new Sensor("MQTT", false, R.drawable.ic_action_communication, "mqtt" ,this));
+            arrayList.add(new com.seu.sensors.Barometer("Barómetro", false, R.drawable.ic_action_barometer, "barometro", this));
+           // arrayList.add(new Sensor("MQTT", false, R.drawable.ic_action_communication, "mqtt" ,this));
 
         }else{ ///> Inicializar los datos con los valores almacenados
 
             boolean item = myPreferences.getBoolean("giroscopio", false);
 
-            arrayList.add(new Sensor("Giroscopio", item, R.drawable.ic_action_gyroscope, "giroscopio", this));
+            arrayList.add(new com.seu.sensors.Gyroscope("Giroscopio", item, R.drawable.ic_action_gyroscope, "giroscopio", this));
             if(item) {
                 ///> Giroscopio
                 Aware.setSetting(this, Aware_Preferences.FREQUENCY_GYROSCOPE, 200000);
@@ -340,7 +425,7 @@ public class MainActivity extends AppCompatActivity {
 
             item = myPreferences.getBoolean("acelerometro", false);
 
-            arrayList.add(new Sensor("Acelerómetro", item, R.drawable.ic_action_accelerometer, "acelerometro", this));
+            arrayList.add(new com.seu.sensors.Accelerometer("Acelerómetro", item, R.drawable.ic_action_accelerometer, "acelerometro", this));
             if(item) {
                 ///> Acelerómetro
                 Aware.setSetting(this, Aware_Preferences.FREQUENCY_ACCELEROMETER, 200000);
@@ -362,7 +447,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             item = myPreferences.getBoolean("luminosidad", false);
-            arrayList.add(new Sensor("Luminosidad", item, R.drawable.ic_action_light, "luminosidad", this));
+            arrayList.add(new com.seu.sensors.Light("Luminosidad", item, R.drawable.ic_action_light, "luminosidad", this));
             if(item) {
                 ///> Luminosidad
                 Aware.setSetting(this, Aware_Preferences.FREQUENCY_LIGHT, 200000);
@@ -371,7 +456,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             item = myPreferences.getBoolean("proximidad", false);
-            arrayList.add(new Sensor("Proximidad", item, R.drawable.ic_action_proximity, "proximidad", this));
+            arrayList.add(new com.seu.sensors.Proximity("Proximidad", item, R.drawable.ic_action_proximity, "proximidad", this));
             if(item){
                 Aware.setSetting(this, Aware_Preferences.FREQUENCY_PROXIMITY, 200000);
                 Aware.setSetting(this, Aware_Preferences.THRESHOLD_PROXIMITY, 0.02f);
@@ -408,10 +493,10 @@ public class MainActivity extends AppCompatActivity {
                 Aware.setSetting(this, Aware_Preferences.THRESHOLD_BAROMETER, 0.02f);
                 Aware.startBarometer(this);
             }
-            arrayList.add(new Sensor("Barómetro", item, R.drawable.ic_action_barometer, "barometro", this));
+            arrayList.add(new com.seu.sensors.Barometer("Barómetro", item, R.drawable.ic_action_barometer, "barometro", this));
 
-            item = myPreferences.getBoolean("mqtt", false);
-            arrayList.add(new Sensor("MQTT", item, R.drawable.ic_action_communication, "mqtt", this));
+            //item = myPreferences.getBoolean("mqtt", false);
+            //arrayList.add(new Sensor("MQTT", item, R.drawable.ic_action_communication, "mqtt", this));
 
         }
 
@@ -431,17 +516,17 @@ public class MainActivity extends AppCompatActivity {
     public void GuardarDatos(){
         SharedPreferences myPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         SharedPreferences.Editor editor = myPreferences.edit();
-        editor.putBoolean( arrayList.get(0).getKey(), arrayList.get(0).getState());
-        editor.putBoolean(arrayList.get(1).getKey(), arrayList.get(1).getState());
-        editor.putBoolean(arrayList.get(2).getKey(), arrayList.get(2).getState());
-        editor.putBoolean(arrayList.get(3).getKey(), arrayList.get(3).getState());
-        editor.putBoolean(arrayList.get(4).getKey(), arrayList.get(4).getState());
-        editor.putBoolean(arrayList.get(5).getKey(), arrayList.get(5).getState());
-        editor.putBoolean(arrayList.get(6).getKey(), arrayList.get(6).getState());
-        editor.putBoolean(arrayList.get(7).getKey(), arrayList.get(7).getState());
-        editor.putBoolean(arrayList.get(8).getKey(), arrayList.get(8).getState());
-        editor.putBoolean(arrayList.get(9).getKey(), arrayList.get(9).getState());
-        editor.putBoolean(arrayList.get(10).getKey(), arrayList.get(10).getState());
+        editor.putBoolean(((Sensor)arrayList.get(0)).getKey(), ((Sensor)arrayList.get(0)).getState());
+        editor.putBoolean(((Sensor)arrayList.get(1)).getKey(),((Sensor) arrayList.get(1)).getState());
+        editor.putBoolean(((Sensor)arrayList.get(2)).getKey(),((Sensor) arrayList.get(2)).getState());
+        editor.putBoolean(((Sensor)arrayList.get(3)).getKey(),((Sensor) arrayList.get(3)).getState());
+        editor.putBoolean(((Sensor)arrayList.get(4)).getKey(),((Sensor) arrayList.get(4)).getState());
+        editor.putBoolean(((Sensor)arrayList.get(5)).getKey(),((Sensor) arrayList.get(5)).getState());
+        editor.putBoolean(((Sensor)arrayList.get(6)).getKey(),((Sensor) arrayList.get(6)).getState());
+        editor.putBoolean(((Sensor)arrayList.get(7)).getKey(), ((Sensor)arrayList.get(7)).getState());
+        editor.putBoolean(((Sensor)arrayList.get(8)).getKey(),((Sensor) arrayList.get(8)).getState());
+        editor.putBoolean(((Sensor)arrayList.get(9)).getKey(), ((Sensor)arrayList.get(9)).getState());
+       // editor.putBoolean(arrayList.get(10).getKey(), arrayList.get(10).getState());
 
         editor.putBoolean("save_sensor", true);
 

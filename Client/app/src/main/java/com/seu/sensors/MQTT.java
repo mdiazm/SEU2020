@@ -1,7 +1,6 @@
 package com.seu.sensors;
 
 
-import android.content.Context;
 import android.util.Log;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -16,6 +15,8 @@ public class MQTT implements MqttCallback {
     private String ip;
     private MqttClient client ;
     private String send_topic;
+    private Boolean connected = false;
+
     public MQTT(String ip){
         this.ip = ip;
     }
@@ -29,15 +30,18 @@ public class MQTT implements MqttCallback {
             send_topic = "sensors/send/";
             client.subscribe(send_topic);
             Log.d("MQTT", send_topic);
+            connected = true;
         } catch (MqttException e) {
             Log.d("MQTT", e.toString());
             e.printStackTrace();
+            connected = false;
         }
     }
 
     @Override
     public void connectionLost(Throwable cause) {
         Log.d("MQTT", "connection lost");
+        connected = false;
     }
 
     @Override
@@ -52,12 +56,30 @@ public class MQTT implements MqttCallback {
     }
 
     public void sendMessage(String sensor, MqttMessage message){
-        try {
+        if(connected) {
+            try {
+                Log.d("MQTT", sensor);
+                client.publish(send_topic + sensor, message);
 
-            client.publish(send_topic + sensor, message);
+            } catch (MqttException e) {
+                e.printStackTrace();
+                connected = false;
+            }
+        }else {
+            try {
+                this.client = new MqttClient("tcp://" + ip + ":1883", "", new MemoryPersistence());
+                client.setCallback( this);
+                client.connect();
+                sendMessage(sensor,message);
+            } catch (MqttException e) {
+                e.printStackTrace();
+                connected = false;
+            }
 
-        }catch (MqttException e){
-            e.printStackTrace();
         }
+    }
+
+    public Boolean getConnected() {
+        return connected;
     }
 }

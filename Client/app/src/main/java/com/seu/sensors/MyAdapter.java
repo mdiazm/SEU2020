@@ -22,10 +22,10 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         void onItemClick(String item, int position);
     }
 
-    private List<Sensor> sensorList = new ArrayList<>();
+    private List<Object> sensorList = new ArrayList<>();
     private OnItemClickListener listener;
 
-    public MyAdapter(ArrayList<Sensor> myDataSet, OnItemClickListener listener) {
+    public MyAdapter(ArrayList<Object> myDataSet, OnItemClickListener listener) {
         sensorList = myDataSet;
         listener = listener;
     }
@@ -48,9 +48,9 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.image.setImageResource(sensorList.get(position).getImage());
-        holder.text.setText(sensorList.get(position).getName());
-        if(sensorList.get(position).getState()) {
+        holder.image.setImageResource(((Sensor) sensorList.get(position)).getImage());
+        holder.text.setText(((Sensor) sensorList.get(position)).getName());
+        if(((Sensor) sensorList.get(position)).getState()) {
             holder.view.setBackgroundColor(holder.view.getResources().getColor(R.color.colorAccent));
         }
         holder.bind(sensorList.get(position), position, listener);
@@ -73,17 +73,17 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
         }
 
-        public void bind(final Sensor item, final int position,  final OnItemClickListener listener) {
+        public void bind(final Object item, final int position,  final OnItemClickListener listener) {
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    System.out.println(item.getName() + " "  + position);
-                    if (item.getState()) {
+                    System.out.println(((Sensor) item).getName() + " "  + position);
+                    if (((Sensor) item).getState()) {
                         view.setBackgroundColor(view.getResources().getColor(R.color.card));
                     } else {
                         view.setBackgroundColor(view.getResources().getColor(R.color.colorAccent));
                     }
-                    item.setState(!item.getState());
+                    ((Sensor) item).setState(!((Sensor) item).getState());
                 }
             });
         }
