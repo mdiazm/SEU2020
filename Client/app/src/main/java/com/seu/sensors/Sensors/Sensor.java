@@ -1,30 +1,24 @@
-package com.seu.sensors;
+package com.seu.sensors.Sensors;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.util.Log;
-
-import com.aware.Accelerometer;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
-import com.aware.Gyroscope;
-import com.aware.Light;
-import com.aware.Temperature;
-import com.aware.providers.Accelerometer_Provider;
 
 public class Sensor {
 
     private String name;
     private boolean state;
     private int image;
+    private String key;
 
     Context context;
 
-    public Sensor(String name, boolean state, int image, Context c){
+    public Sensor(String name, boolean state, int image, String key, Context c){
         this.name = name;
         this.state = state;
         this.image = image;
         this.context = c;
+        this.key = key;
     }
 
     public String getName() {
@@ -37,21 +31,26 @@ public class Sensor {
 
     public void setState(boolean state) {
         if(state){
-
             if(name == "Acelerómetro") {
                 ///> Acelerómetro
                 Aware.startAccelerometer(context);
             }else if(name == "Giroscopio") {
                 ///> Giroscopio
                 Aware.startGyroscope(context);
-
             }else if(name == "Luminosidad") {
                 ///> Luminosidad
                  Aware.startLight(context);
-
             }else if(name == "Temperatura") {
                 ///> Temperatura
                 Aware.startTemperature(context);
+            }else if(name == "Batería"){
+                Aware.startBattery(context);
+            }else if(name == "GPS"){
+                Aware.startLocations(context);
+            }else if(name == "Proximidad"){
+                Aware.startProximity(context);
+            }else if(name == "Barómetro"){
+                Aware.startBarometer(context);
             }
         }else{
             if(name == "Acelerómetro") {
@@ -62,6 +61,14 @@ public class Sensor {
                 Aware.stopLight(context);
             }else if(name == "Temperatura") {
                 Aware.stopTemperature(context);
+            }else if(name == "Batería"){
+                Aware.stopBattery(context);
+            }else if(name == "GPS"){
+                Aware.stopLocations(context);
+            }else if(name =="Proximidad"){
+                Aware.stopProximity(context);
+            }else if(name == "Barómetro"){
+                Aware.stopBarometer(context);
             }
         }
 
@@ -78,6 +85,22 @@ public class Sensor {
 
     public int getImage() {
         return image;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    public void setContext(Context context) {
+        this.context = context;
     }
 
 }
