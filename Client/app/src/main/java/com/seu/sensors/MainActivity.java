@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
         GuardarDatos();
 
         //mqtt = new MQTT("10.82.197.241");
-        mqtt = new MQTT("192.168.0.14");
+        mqtt = new MQTT("192.168.1.75");
         mqtt.init();
 
         getMacAddress();

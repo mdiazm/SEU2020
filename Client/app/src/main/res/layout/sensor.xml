@@ -18,5 +18,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center_vertical"
         android:layout_margin="8dp"
-        android:gravity="center_horizontal|center_vertical"></TextView>
+        android:fontFamily="@font/vcr"
+        android:gravity="center_horizontal|center_vertical"
+        android:text="acelerómetro"
+        android:textSize="18sp"></TextView>
 </androidx.cardview.widget.CardView>
