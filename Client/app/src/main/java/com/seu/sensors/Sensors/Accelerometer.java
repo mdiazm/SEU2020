@@ -1,4 +1,4 @@
-package com.seu.sensors;
+package com.seu.sensors.Sensors;
 
 import android.content.Context;
 
@@ -9,7 +9,7 @@ public class Accelerometer extends Sensor {
     private float x;
     private  float y;
     private  float z;
-    private Date timestamp;
+    private String timestamp;
     private float offset;
 
     public Accelerometer(String name, boolean state, int image, String key, Context c){
@@ -54,15 +54,15 @@ public class Accelerometer extends Sensor {
         this.z = z;
     }
 
-    public Date getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 
-    public void setAttributes(float x, float y, float z, Date timestamp){
+    public void setAttributes(float x, float y, float z, String timestamp){
         this.x = x;
         this.y = y;
         this.z = z;

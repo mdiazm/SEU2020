@@ -1,4 +1,4 @@
-package com.seu.sensors;
+package com.seu.sensors.Sensors;
 
 import android.content.Context;
 
@@ -6,10 +6,7 @@ import java.util.Date;
 
 public class Locations extends Sensor {
 
-    private float x;
-    private  float y;
-    private  float z;
-    private Date timestamp;
+    private String timestamp;
     private float latitude;
     private float longitude;
     private float bearing;
@@ -17,7 +14,7 @@ public class Locations extends Sensor {
     private float provider;
     private float altitude;
     private float accuracy;
-
+    private float offset;
     public Locations(String name, boolean state, int image, String key, Context c){
         super(name, state, image, key, c);
 
@@ -48,28 +45,52 @@ public class Locations extends Sensor {
         super.setName(name);
     }
 
-    public Date getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 
-    public void setAttributes(float x, float y, float z, Date timestamp){
-        this.x = x;
-        this.y = y;
-        this.z = z;
+    public void setAttributes(float x, float y, float z, String timestamp){
         this.timestamp = timestamp;
 
     }
 
-
-  /* public void setOffset(float offset) {
+    public void setOffset(float offset) {
         this.offset = offset;
     }
 
     public float getOffset() {
         return offset;
-    }*/
+    }
+
+    public void setBearing(float bearing) {
+        this.bearing = bearing;
+    }
+
+    public void setAltitude(float altitude) {
+        this.altitude = altitude;
+    }
+
+    public void setAccuracy(float accuracy) {
+        this.accuracy = accuracy;
+    }
+
+    public void setLongitude(float longitude) {
+        this.longitude = longitude;
+    }
+
+    public void setLatitude(float latitude) {
+        this.latitude = latitude;
+    }
+
+    public void setProvider(float provider) {
+        this.provider = provider;
+    }
+
+    public void setSpeed(float speed) {
+        this.speed = speed;
+    }
 }

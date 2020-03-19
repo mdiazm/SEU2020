@@ -1,4 +1,4 @@
-package com.seu.sensors;
+package com.seu.sensors.Sensors;
 
 import android.content.Context;
 import com.aware.Aware;

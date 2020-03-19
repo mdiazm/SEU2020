@@ -1,4 +1,4 @@
-package com.seu.sensors;
+package com.seu.sensors.Sensors;
 
 import android.content.Context;
 
@@ -7,7 +7,7 @@ import java.util.Date;
 public class Proximity extends Sensor {
 
     private float proximity;
-    private Date timestamp;
+    private String timestamp;
 
     private float offset;
 
@@ -41,15 +41,15 @@ public class Proximity extends Sensor {
         super.setName(name);
     }
 
-    public Date getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 
-    public void setAttributes(float proximity, Date timestamp){
+    public void setAttributes(float proximity, String timestamp){
       this.proximity = proximity;
         this.timestamp = timestamp;
 

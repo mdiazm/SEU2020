@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.READ_INTERNAL_STORAGE" />
     <permission android:name="com.aware.READ_CONTEXT_DATA" android:description="@string/read_permission" android:icon="@drawable/ic_launcher_settings" android:label="Read AWARE's Context data" android:protectionLevel="normal" />
     <permission android:name="com.aware.WRITE_CONTEXT_DATA" android:description="@string/write_permission" android:icon="@drawable/ic_launcher_settings" android:label="Write to AWARE's Context data" android:protectionLevel="normal" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>
 
     <application
         android:allowBackup="true"

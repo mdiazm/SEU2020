@@ -1,20 +1,18 @@
-package com.seu.sensors;
+package com.seu.sensors.Sensors;
 
 import android.content.Context;
 
 import java.util.Date;
 
-public class Gyroscope extends Sensor {
+public class Temperature  extends Sensor {
 
-    private float x;
-    private  float y;
-    private  float z;
-    private Date timestamp;
+    private float value;
+    private String timestamp;
     private float offset;
 
-    public Gyroscope(String name, boolean state, int image, String key, Context c){
+    public Temperature(String name, boolean state, int image, String key, Context c){
         super(name, state, image, key, c);
-        offset = 3.0f;
+        offset = 0.5f;
     }
 
     @Override
@@ -42,44 +40,27 @@ public class Gyroscope extends Sensor {
         super.setName(name);
     }
 
-    public void setX(float x) {
-        this.x = x;
+    public void setValue(float x) {
+        this.value = x;
     }
 
-    public void setY(float y) {
-        this.y = y;
-    }
 
-    public void setZ(float z) {
-        this.z = z;
-    }
-
-    public Date getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 
-    public void setAttributes(float x, float y, float z, Date timestamp){
-        this.x = x;
-        this.y = y;
-        this.z = z;
+    public void setAttributes(float x, String timestamp){
+        this.value = x;
         this.timestamp = timestamp;
 
     }
 
-    public float getX() {
-        return x;
-    }
-
-    public float getY() {
-        return y;
-    }
-
-    public float getZ() {
-        return z;
+    public float getValue() {
+        return value;
     }
 
     public void setOffset(float offset) {

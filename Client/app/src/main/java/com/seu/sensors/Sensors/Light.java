@@ -1,20 +1,18 @@
-package com.seu.sensors;
+package com.seu.sensors.Sensors;
 
 import android.content.Context;
 
 import java.util.Date;
 
-public class Barometer extends Sensor {
+public class Light extends Sensor {
 
     private float x;
-    private  float y;
-    private  float z;
-    private Date timestamp;
+    private String timestamp;
     private float offset;
 
-    public Barometer(String name, boolean state, int image, String key, Context c){
+    public Light(String name, boolean state, int image, String key, Context c){
         super(name, state, image, key, c);
-        offset = 5.0f;
+        offset = 2.0f;
     }
 
     @Override
@@ -42,28 +40,24 @@ public class Barometer extends Sensor {
         super.setName(name);
     }
 
-    public void setValue(float x) {
+    public void setX(float x) {
         this.x = x;
     }
 
-
-    public Date getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 
-    public void setAttributes(float x, float y, float z, Date timestamp){
+    public void setAttributes(float x, String timestamp){
         this.x = x;
-        this.y = y;
-        this.z = z;
         this.timestamp = timestamp;
-
     }
 
-    public float getValue() {
+    public float getX() {
         return x;
     }
 
