@@ -348,9 +348,9 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject json = new JSONObject();
                     json.put("device", getDevice());
-                    json.put("timestamp", "reboot");
+                    json.put("value", "reboot");
 
-                    mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
+                    mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
 
                 }catch (Exception e){
                     e.printStackTrace();
@@ -362,9 +362,9 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject json = new JSONObject();
                     json.put("device", getDevice());
-                    json.put("timestamp", "shutdown");
+                    json.put("value", "shutdown");
 
-                    mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
+                    mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
 
                 }catch (Exception e){
                     e.printStackTrace();
@@ -376,9 +376,9 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject json = new JSONObject();
                     json.put("device", getDevice());
-                    json.put("timestamp", "battery_low");
+                    json.put("value", "battery_low");
 
-                    mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
+                    mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
 
                 }catch (Exception e){
                     e.printStackTrace();
@@ -390,9 +390,9 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject json = new JSONObject();
                     json.put("device", getDevice());
-                    json.put("timestamp", "charging");
+                    json.put("value", "charging");
 
-                    mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
+                    mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
 
                 }catch (Exception e){
                     e.printStackTrace();
@@ -404,9 +404,9 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject json = new JSONObject();
                     json.put("device", getDevice());
-                    json.put("timestamp", "discharging");
+                    json.put("value", "discharging");
 
-                    mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
+                    mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
 
                 }catch (Exception e){
                     e.printStackTrace();

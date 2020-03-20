@@ -93,6 +93,15 @@ var BarometerSchema = new Schema({
 
 var Barometer = mongoose.model('Barometer', BarometerSchema);
 
+// Phone status (shutdown, charging, discharging...)
+var StatusSchema = new Schema({
+    device: String,
+    timestamp: {type: Date, default: Date.now},
+    value: String // Status of the sender's phone.
+});
+
+var Status = mongoose.model('Status', StatusSchema);
+
 /** Functions to store and load data in/from the database */
 
 // Sensors enum
@@ -103,7 +112,8 @@ const Sensors = {
     LIGHT: "light",
     PROXIMITY: "proximity",
     BATTERY: "battery",
-    BAROMETER: "barometer"
+    BAROMETER: "barometer",
+    STATUS: "status"
 };
 
 module.exports.Sensors = Sensors;
@@ -116,7 +126,8 @@ module.exports.Models = {
     Light,
     Proximity,
     Battery,
-    Barometer
+    Barometer,
+    Status
 };
 
 /**
@@ -126,7 +137,6 @@ module.exports.Models = {
 function insertData(data){
     data.save((err, item) => {
         if(err) return console.error(err);
-        console.log(item);
     })
 }
 

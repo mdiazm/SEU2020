@@ -77,7 +77,6 @@ client.on('message', (topic, message) => {
             });
             // Insert data in the database
             InsertData(values);
-            console.log(values);
             break;
 
         case Sensors.GPS:
@@ -135,6 +134,16 @@ client.on('message', (topic, message) => {
                 timestamp: new Date(json.timestamp),
                 value: json.value
             });
+            // Insert data in the database
+            InsertData(values);
+            break;
+
+        case Sensors.STATUS:
+            var values = new Models.Status({
+                device: json.device,
+                value: json.value
+            });
+
             // Insert data in the database
             InsertData(values);
             break;
