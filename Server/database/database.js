@@ -7,11 +7,21 @@ const mongoose = require("mongoose");
 // Connect to Database
 mongoose.connect("mongodb://mdmedina:123456@localhost:27017/sensorsDatabase", {useNewUrlParser: true, useUnifiedTopology: true});
 
+// Flag to indicate if database is ready.
+var databaseReady = false;
+module.exports.databaseReady = databaseReady;
+
+// Array of available sensors
+var availableSensors = new Array();
+
 // Check errors
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error: '));
 db.once('open', () => {
     console.log("Database is now connected");
+    getSensorsIdentifiers();
+    databaseReady = true;
+    module.exports.databaseReady = databaseReady;
 });
 
 // Create models for the objects and data which is going to be stored in the database.
@@ -148,7 +158,7 @@ module.exports.insertData = insertData;
  * @param MongooseModel sensor to obtain data from
  * @param Integer number of records to query in the database. 
  */
-function getLast(sensor, number){
+async function getLast(sensor, number){
 
     var sensorModel = null;
 
@@ -169,29 +179,37 @@ function getLast(sensor, number){
         case Sensors.PROXIMITY:
             sensorModel = Proximity;
             break;
-        case Sensors.PROXIMITY:
-            sensorModel = Proximity;
+        case Sensors.BATTERY:
+            sensorModel = Battery;
             break;
-        case Sensors.Status:
+        case Sensors.BAROMETER:
+            sensorModel = Barometer;
+            break;
+        case Sensors.STATUS:
             sensorModel = Status;
             break;
     }
 
     // Perform query in the database on the specified model
     if(sensorModel != null){
-        sensorModel.find()
+        var value = await sensorModel.find()
         .sort("-timestamp")
-        .limit(number)
-        .then(data => {return data})
-        .catch(err => console.err(err));
+        .limit(number);
+        return value;
+    } else {
+        return null;
     }
-
-    return null;
 }
 
 // Export this function to use it from code.
 module.exports.getLast = getLast;
 
+/**
+ * Get all records in time frame indicated in seconds parameter. The system returns each record from the
+ * last saved until specified seconds in the past.
+ * @param {*} sensor id of the sensor to recover information from.
+ * @param {*} seconds size of the time frame.
+ */
 async function getLastRecordsInSeconds(sensor, seconds){
     
     var sensorModel = null;
@@ -213,10 +231,13 @@ async function getLastRecordsInSeconds(sensor, seconds){
         case Sensors.PROXIMITY:
             sensorModel = Proximity;
             break;
-        case Sensors.PROXIMITY:
-            sensorModel = Proximity;
+        case Sensors.BATTERY:
+            sensorModel = Battery;
             break;
-        case Sensors.Status:
+        case Sensors.BAROMETER:
+            sensorModel = Barometer;
+            break;
+        case Sensors.STATUS:
             sensorModel = Status;
             break;
     }
@@ -238,3 +259,41 @@ async function getLastRecordsInSeconds(sensor, seconds){
 }
 
 module.exports.getLastRecordsInSeconds = getLastRecordsInSeconds;
+
+
+function getSensorsIdentifiers(){
+    db.db.listCollections().toArray(function(err, names){
+        names.forEach(function(value, index, array){
+            var sensorName = value.name.toLowerCase();
+            var sensorsInitials = sensorName.slice(0, 4);
+            
+            switch(sensorsInitials){
+                case Sensors.ACCELEROMETER.slice(0, 4):
+                    availableSensors.push(Sensors.ACCELEROMETER);
+                    break;
+                case Sensors.GYROSCOPE.slice(0, 4):
+                    availableSensors.push(Sensors.GYROSCOPE);
+                    break;
+                case Sensors.GPS.slice(0, 4):
+                    availableSensors.push(Sensors.GPS);
+                    break;
+                case Sensors.LIGHT.slice(0, 4):
+                    availableSensors.push(Sensors.LIGHT);
+                    break;
+                case Sensors.PROXIMITY.slice(0, 4):
+                    availableSensors.push(Sensors.PROXIMITY);
+                    break;
+                case Sensors.BATTERY.slice(0, 4):
+                    availableSensors.push(Sensors.BATTERY);
+                    break;
+                case Sensors.BAROMETER.slice(0, 4):
+                    availableSensors.push(Sensors.BAROMETER);
+                    break;
+                case Sensors.STATUS.slice(0, 4):
+                    availableSensors.push(Sensors.STATUS);
+                    break;                                                  
+            }
+        });
+        module.exports.availableSensors = availableSensors;
+    });
+}
