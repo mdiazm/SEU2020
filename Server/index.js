@@ -12,4 +12,6 @@ app.listen(3000, () => {
 database.getLast("hola", 25);
 
 var data = database.getLastRecordsInSeconds("accelerometer", 100);
-console.log(data);
+data.then(result => {
+    console.log(result);
+});

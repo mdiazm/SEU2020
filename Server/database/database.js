@@ -192,7 +192,7 @@ function getLast(sensor, number){
 // Export this function to use it from code.
 module.exports.getLast = getLast;
 
-function getLastRecordsInSeconds(sensor, seconds){
+async function getLastRecordsInSeconds(sensor, seconds){
     
     var sensorModel = null;
 
@@ -223,18 +223,18 @@ function getLastRecordsInSeconds(sensor, seconds){
 
     // Perform query in the database on the specified model
     if(sensorModel != null){
-        return sensorModel.findOne({}, {}, {sort: {"timestamp": -1}}, function(err, post){
-            if(post != null){
-                var interval = new Date(post.timestamp - seconds * 1000 /** To calculate millis */);
+        var interval = await sensorModel.findOne().sort({"timestamp": -1});
 
-                sensorModel.find({"timestamp" : {$gt: interval.toISOString()}}, {}, {sort: {"timestamp": -1}}, function(error, data){
-                    return data == null ? data : null;
-                });
-            }
-        }).exec();
+        interval = new Date(interval.timestamp - seconds * 1000);
+
+        const data = await sensorModel.find({"timestamp" : {$gt: interval.toISOString()}}, {}, {sort: {"timestamp": -1}}, function(error, data){
+            return data == null ? data : null;
+        });
+
+        return data;
+    } else {
+        return null;
     }
-
-    return null;
 }
 
 module.exports.getLastRecordsInSeconds = getLastRecordsInSeconds;
