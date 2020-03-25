@@ -10,7 +10,7 @@ const database = require("./database/database");
  * GET to obtain every record in a specified time frame. 
  * EXAMPLE Format of the request: ip:3000/getLastInFrame?sensorName=accelerometer&secondsFrame=5
  */
-app.get('/getLastInFrame', function(req, res){
+app.get('/getLastRecordsInFrame', function(req, res){
 
     if(database.databaseReady){
         var sensorName = req.query.sensorName;
