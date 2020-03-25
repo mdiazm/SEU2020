@@ -142,3 +142,99 @@ function insertData(data){
 
 // Export function to insert data
 module.exports.insertData = insertData;
+
+/**
+ * Get last 'number' records from the specified sensor. 
+ * @param MongooseModel sensor to obtain data from
+ * @param Integer number of records to query in the database. 
+ */
+function getLast(sensor, number){
+
+    var sensorModel = null;
+
+    // Get model to find records.
+    switch(sensor){
+        case Sensors.ACCELEROMETER:
+            sensorModel = Accelerometer;
+            break;
+        case Sensors.GYROSCOPE:
+            sensorModel = Gyroscope;
+            break;
+        case Sensors.GPS:
+            sensorModel = GPS;
+            break;
+        case Sensors.LIGHT:
+            sensorModel = Light;
+            break;
+        case Sensors.PROXIMITY:
+            sensorModel = Proximity;
+            break;
+        case Sensors.PROXIMITY:
+            sensorModel = Proximity;
+            break;
+        case Sensors.Status:
+            sensorModel = Status;
+            break;
+    }
+
+    // Perform query in the database on the specified model
+    if(sensorModel != null){
+        sensorModel.find()
+        .sort("-timestamp")
+        .limit(number)
+        .then(data => {return data})
+        .catch(err => console.err(err));
+    }
+
+    return null;
+}
+
+// Export this function to use it from code.
+module.exports.getLast = getLast;
+
+function getLastRecordsInSeconds(sensor, seconds){
+    
+    var sensorModel = null;
+
+    // Get model to find records.
+    switch(sensor){
+        case Sensors.ACCELEROMETER:
+            sensorModel = Accelerometer;
+            break;
+        case Sensors.GYROSCOPE:
+            sensorModel = Gyroscope;
+            break;
+        case Sensors.GPS:
+            sensorModel = GPS;
+            break;
+        case Sensors.LIGHT:
+            sensorModel = Light;
+            break;
+        case Sensors.PROXIMITY:
+            sensorModel = Proximity;
+            break;
+        case Sensors.PROXIMITY:
+            sensorModel = Proximity;
+            break;
+        case Sensors.Status:
+            sensorModel = Status;
+            break;
+    }
+
+    // Perform query in the database on the specified model
+    if(sensorModel != null){
+        return sensorModel.findOne({}, {}, {sort: {"timestamp": -1}}, function(err, post){
+            if(post != null){
+                var interval = new Date(post.timestamp - seconds * 1000 /** To calculate millis */);
+
+                sensorModel.find({"timestamp" : {$gt: interval.toISOString()}}, {}, {sort: {"timestamp": -1}}, function(error, data){
+                    return data == null ? data : null;
+                });
+            }
+        }).exec();
+    }
+
+    return null;
+}
+
+module.exports.getLastRecordsInSeconds = getLastRecordsInSeconds;
