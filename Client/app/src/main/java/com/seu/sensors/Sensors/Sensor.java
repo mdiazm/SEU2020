@@ -1,8 +1,10 @@
 package com.seu.sensors.Sensors;
 
+import android.app.Notification;
 import android.content.Context;
 import com.aware.Aware;
 import com.aware.Aware_Preferences;
+import com.aware.utils.Aware_Plugin;
 
 public class Sensor {
 
@@ -52,6 +54,7 @@ public class Sensor {
             }else if(name == "Barómetro"){
                 Aware.startBarometer(context);
             }
+
         }else{
             if(name == "Acelerómetro") {
                 Aware.stopAccelerometer(context);

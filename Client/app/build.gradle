@@ -35,5 +35,12 @@ dependencies {
 
     ///> MQTT configuration
     compileOnly 'com.google.android.things:androidthings:0.1-devpreview'
-    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2'
+    //implementation 'org.eclipse.paho.android.service-1.1.1'
+    //implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2'
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.1'
+    implementation('org.eclipse.paho:org.eclipse.paho.android.service:1.1.1') {
+        exclude group: 'com.android.support'
+        exclude module: 'appcompat-v7'
+        exclude module: 'support-v4'
+    }
 }

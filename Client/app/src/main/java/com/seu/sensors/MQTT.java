@@ -17,32 +17,49 @@ public class MQTT implements MqttCallback {
     private String send_topic;
     private Boolean connected = false;
 
-    public MQTT(String ip){
+    public MQTT(String ip) {
         this.ip = ip;
-    }
-
-    public void init(){
+        send_topic = "sensors/send/";
         try {
-            Log.d("MQTT", "intentando");
             this.client = new MqttClient("tcp://" + ip + ":1883", "", new MemoryPersistence());
             client.setCallback( this);
-            client.connect();
-            send_topic = "sensors/send/";
-            client.subscribe(send_topic);
-            Log.d("MQTT", send_topic);
-            connected = true;
+
         } catch (MqttException e) {
-            Log.d("MQTT", e.toString());
             e.printStackTrace();
-            connected = false;
+
         }
+    }
+
+    public boolean init(){
+        if(!connected) {
+            try {
+                Log.d("MQTT", "intentando");
+                client.connect();
+                send_topic = "sensors/send/";
+                client.subscribe(send_topic);
+                connected = true;
+                return true;
+            } catch (MqttException e) {
+                Log.d("MQTT", e.toString());
+                e.printStackTrace();
+                connected = false;
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
     public void connectionLost(Throwable cause) {
         Log.d("MQTT", "connection lost");
         connected = false;
+        try {
+            client.disconnect();
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
     }
+
 
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
@@ -64,6 +81,11 @@ public class MQTT implements MqttCallback {
             } catch (MqttException e) {
                 e.printStackTrace();
                 connected = false;
+                try {
+                    client.disconnect();
+                } catch (MqttException er) {
+                    er.printStackTrace();
+                }
             }
         }else {
             try {
@@ -74,6 +96,11 @@ public class MQTT implements MqttCallback {
             } catch (MqttException e) {
                 e.printStackTrace();
                 connected = false;
+                try {
+                    client.disconnect();
+                } catch (MqttException err) {
+                    err.printStackTrace();
+                }
             }
 
         }
