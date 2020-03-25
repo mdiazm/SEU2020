@@ -14,13 +14,15 @@ app.get('/getLastInFrame', function(req, res){
 
     if(database.databaseReady){
         var sensorName = req.query.sensorName;
-        var secondsFrame = req.query.secondsFrame;
+        var secondsFrame = Number(req.query.secondsFrame);
 
-        var data = database.getLastRecordsInSeconds("accelerometer", 100);
+        var data = database.getLastRecordsInSeconds(sensorName, secondsFrame);
+
+        // Send data in JSON format
         data.then(result => {
-            console.log(result);
             res.json(result);
         });
+
     } else {
     var result = "Database is starting";
     res.send(result);
@@ -39,6 +41,29 @@ app.get("/getAvailableSensors", function(req, res){
         res.send(result);
     }
 })
+
+/**
+ * GET to obtain a specified number of records in  
+ * EXAMPLE Format of the request: ip:3000/getLastInFrame?sensorName=accelerometer&secondsFrame=5
+ */
+app.get('/getLastRecords', function(req, res){
+
+    if(database.databaseReady){
+        var sensorName = req.query.sensorName;
+        var recordsNumber = Number(req.query.recordsNumber);
+
+        var data = database.getLast(sensorName, recordsNumber);
+
+        // Send data in JSON format
+        data.then(result => {
+            res.json(result);
+        });
+
+    } else {
+        var result = "Database is starting";
+        res.send(result);
+    }
+});
 
 // Start server
 app.listen(3000, () => {
