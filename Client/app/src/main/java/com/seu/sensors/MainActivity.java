@@ -41,13 +41,11 @@ import com.aware.providers.Proximity_Provider;
 import com.aware.providers.Temperature_Provider;
 
 import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.lang.Math;
-import java.util.Date;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
@@ -55,12 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private MyAdapter mAdapter;
     ArrayList<Object> arrayList = new ArrayList<>();
 
-    private MqttClient mqtt_client;
     private MQTT mqtt;
-
-    //private MQTT pahoMqttClient;
-
-
     private String mac;
 
 
@@ -129,115 +122,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void InitListener(){
-
-       /* Applications.setSensorObserver(new Applications.AWARESensorObserver() {
-            @Override
-            public void onForeground(ContentValues data) {
-                String name_app = data.get(Applications_Provider.Applications_Foreground.APPLICATION_NAME).toString();
-                String name_package = data.get(Applications_Provider.Applications_Foreground.PACKAGE_NAME).toString();
-                String device = getDevice();
-                String timestamp = data.get(Gyroscope_Provider.Gyroscope_Data.TIMESTAMP).toString();
-
-                String history_timestamp = data.get(Applications_Provider.Applications_History.TIMESTAMP).toString();
-                String history_endtimestamp = data.get(Applications_Provider.Applications_History.END_TIMESTAMP).toString();
-                String history_package = data.get(Applications_Provider.Applications_History.PACKAGE_NAME).toString();
-                String history_app_name = data.get(Applications_Provider.Applications_History.APPLICATION_NAME).toString();
-                String history_id_process = data.get(Applications_Provider.Applications_History.PROCESS_ID).toString();
-                String history_process_importance = data.get(Applications_Provider.Applications_History.PROCESS_IMPORTANCE).toString();
-                String history_is_system_app = data.get(Applications_Provider.Applications_History.IS_SYSTEM_APP).toString();
-
-                for (int i = 0; i < arrayList.size(); i++) {
-                    if (arrayList.get(i) instanceof com.seu.sensors.Sensors.Apps) {
-
-                        try {
-                            JSONObject json = new JSONObject();
-                            json.put("device", device);
-                            json.put("timestamp", timestamp);
-                            json.put("name_app", name_app);
-                            json.put("package_name", name_package);
-
-                            JSONObject json_history = new JSONObject();
-                            json_history.put("device", device);
-                            json_history.put("timestamp_start", history_timestamp);
-                            json_history.put("timestamp_end", history_endtimestamp);
-                            json_history.put("package", history_package);
-                            json_history.put("app_name", history_app_name);
-                            json_history.put("id_process", history_id_process);
-                            json_history.put("process_importance", history_process_importance);
-                            json_history.put("is_system_app", history_is_system_app);
-
-
-                            if (mqtt.getConnected()) {
-                                mqtt.sendMessage("apps", new MqttMessage(json.toString().getBytes()));
-                                mqtt.sendMessage("apps_history", new MqttMessage(json_history.toString().getBytes()));
-
-                            } else {
-                                mqtt.init();
-                                Log.d("MQTT", "no hay conexion");
-                            }
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-
-            }
-
-            @Override
-            public void onNotification(ContentValues data) {
-                String name_app = data.get(Applications_Provider.Applications_Notifications.APPLICATION_NAME).toString();
-                String name_package = data.get(Applications_Provider.Applications_Notifications.PACKAGE_NAME).toString();
-                String device = getDevice();
-                String timestamp = data.get(Gyroscope_Provider.Gyroscope_Data.TIMESTAMP).toString();
-
-                for (int i = 0; i < arrayList.size(); i++) {
-                    if (arrayList.get(i) instanceof com.seu.sensors.Sensors.Apps) {
-
-                        try {
-                            JSONObject json = new JSONObject();
-                            json.put("device", device);
-                            json.put("timestamp", timestamp);
-                            json.put("name_app", name_app);
-                            json.put("package_name", name_package);
-
-                            if (mqtt.getConnected()) {
-                                mqtt.sendMessage("notification", new MqttMessage(json.toString().getBytes()));
-                            } else {
-                                mqtt.init();
-                                Log.d("MQTT", "no hay conexion");
-                            }
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onCrash(ContentValues data) {
-
-            }
-
-            @Override
-            public void onKeyboard(ContentValues data) {
-
-            }
-
-            @Override
-            public void onBackground(ContentValues data) {
-
-            }
-
-            @Override
-            public void onTouch(ContentValues data) {
-
-            }
-        });
-
-*/
-
         Gyroscope.setSensorObserver(new Gyroscope.AWARESensorObserver() {
             @Override
             public void onGyroscopeChanged(ContentValues data) {
@@ -713,11 +597,10 @@ public class MainActivity extends AppCompatActivity {
             Aware.startTemperature(this);
             arrayList.add(new com.seu.sensors.Sensors.Temperature("Temperatura", true, R.drawable.ic_action_temperature, "temperatura", this));
 
-
-           // arrayList.add(new Apps("Uso de apps", false, R.drawable.ic_action_applications, "uso_apps", this));
+            ///> Batería
             arrayList.add(new com.seu.sensors.Sensors.Battery("Batería", false, R.drawable.ic_action_battery, "bateria", this));
+            ///> Barómetro
             arrayList.add(new com.seu.sensors.Sensors.Barometer("Barómetro", false, R.drawable.ic_action_barometer, "barometro", this));
-           // arrayList.add(new Sensor("MQTT", false, R.drawable.ic_action_communication, "mqtt" ,this));
 
         }else{ ///> Inicializar los datos con los valores almacenados
 
@@ -775,15 +658,6 @@ public class MainActivity extends AppCompatActivity {
                 Aware.startTemperature(this);
             }
 
-           /* item = myPreferences.getBoolean("uso_apps", false);
-            arrayList.add(new Apps("Uso de apps", item, R.drawable.ic_action_applications, "uso_apps", this));
-            if(item){
-                Aware.setSetting(this, Aware_Preferences.STATUS_APPLICATIONS, true);
-                Aware.setSetting(this, Aware_Preferences.STATUS_NOTIFICATIONS, true);
-                Aware.setSetting(this, Aware_Preferences.FREQUENCY_APPLICATIONS, 200000);
-             //   Aware.startApplications(this);
-            }*/
-
             item = myPreferences.getBoolean("bateria", false);
             arrayList.add(new com.seu.sensors.Sensors.Battery("Batería", item, R.drawable.ic_action_battery, "bateria" ,this));
             if(item){
@@ -797,9 +671,6 @@ public class MainActivity extends AppCompatActivity {
                 Aware.startBarometer(this);
             }
             arrayList.add(new com.seu.sensors.Sensors.Barometer("Barómetro", item, R.drawable.ic_action_barometer, "barometro", this));
-
-            //item = myPreferences.getBoolean("mqtt", false);
-            //arrayList.add(new Sensor("MQTT", item, R.drawable.ic_action_communication, "mqtt", this));
 
         }
 
@@ -828,8 +699,6 @@ public class MainActivity extends AppCompatActivity {
         editor.putBoolean(((Sensor)arrayList.get(6)).getKey(),((Sensor) arrayList.get(6)).getState());
         editor.putBoolean(((Sensor)arrayList.get(7)).getKey(), ((Sensor) arrayList.get(7)).getState());
         editor.putBoolean(((Sensor)arrayList.get(8)).getKey(),((Sensor) arrayList.get(8)).getState());
-       // editor.putBoolean(arrayList.get(10).getKey(), arrayList.get(10).getState());
-
         editor.putBoolean("save_sensor", true);
 
         editor.commit();
