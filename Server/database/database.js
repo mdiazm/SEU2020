@@ -14,15 +14,11 @@ mongoose.connect("mongodb://mdmedina:123456@localhost:27017/sensorsDatabase", {u
 var databaseReady = false;
 module.exports.databaseReady = databaseReady;
 
-// Array of available sensors
-var availableSensors = new Array();
-
 // Check errors
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error: '));
 db.once('open', () => {
     console.log("Database is now connected");
-    getSensorsIdentifiers();
     databaseReady = true;
     module.exports.databaseReady = databaseReady;
 });
@@ -274,42 +270,26 @@ async function getLastRecordsInSeconds(sensor, seconds, device){
 
 module.exports.getLastRecordsInSeconds = getLastRecordsInSeconds;
 
-function getSensorsIdentifiers(){
-    availableSensors = [];
-    db.db.listCollections().toArray(function(err, names){
-        names.forEach(function(value, index, array){
-            var sensorName = value.name.toLowerCase();
-            var sensorsInitials = sensorName.slice(0, 4);
-            
-            switch(sensorsInitials){
-                case Sensors.ACCELEROMETER.slice(0, 4):
-                    availableSensors.push(Sensors.ACCELEROMETER);
-                    break;
-                case Sensors.GYROSCOPE.slice(0, 4):
-                    availableSensors.push(Sensors.GYROSCOPE);
-                    break;
-                case Sensors.GPS.slice(0, 4):
-                    availableSensors.push(Sensors.GPS);
-                    break;
-                case Sensors.LIGHT.slice(0, 4):
-                    availableSensors.push(Sensors.LIGHT);
-                    break;
-                case Sensors.PROXIMITY.slice(0, 4):
-                    availableSensors.push(Sensors.PROXIMITY);
-                    break;
-                case Sensors.BATTERY.slice(0, 4):
-                    availableSensors.push(Sensors.BATTERY);
-                    break;
-                case Sensors.BAROMETER.slice(0, 4):
-                    availableSensors.push(Sensors.BAROMETER);
-                    break;
-                case Sensors.STATUS.slice(0, 4):
-                    availableSensors.push(Sensors.STATUS);
-                    break;                                                  
-            }
+/**
+ * Get available sensors for the given device.
+ * @param {*} device id of the device. This pre-configured on the web app.
+ */
+async function getSensorsIdentifiers(device){
+    var availableSensors = [];
+
+    var models = mongoose.models;
+
+    for (var obj in models){
+        var data = await models[obj].find({"device": device}, (err, data) => {
+            return data;
         });
-        module.exports.availableSensors = availableSensors;
-    });
+
+        if(data.length > 0 && obj.toLowerCase() != "device"){
+            availableSensors.push(obj.toLowerCase());
+        }
+    }
+
+    return availableSensors;
 }
 
 module.exports.getSensorsIdentifiers = getSensorsIdentifiers;

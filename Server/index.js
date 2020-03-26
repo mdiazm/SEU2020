@@ -55,7 +55,7 @@ app.get("/getAvailableSensors", function(req, res){
     // If session variable is defined.
     if(sess.deviceId){
         if(database.databaseReady){
-            var sensorNames = database.availableSensors;
+            var sensorNames = database.getSensorsIdentifiers(sess.deviceId);
             return res.json(sensorNames);
         } else {
             var result = "Database is starting";
