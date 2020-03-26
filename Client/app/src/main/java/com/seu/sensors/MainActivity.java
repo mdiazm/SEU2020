@@ -53,21 +53,23 @@ import java.util.ArrayList;
 import java.lang.Math;
 import java.util.UUID;
 
+/**
+ * Clase principal para el control de la aplicación
+ * */
 public class MainActivity extends AppCompatActivity {
 
-    private MyAdapter mAdapter;
-    ArrayList<Object> arrayList = new ArrayList<>();
+    private MyAdapter mAdapter; ///> Adaptador para mostrar los distintos sensores
+    ArrayList<Object> arrayList = new ArrayList<>(); ///> Array de sensores
 
-    private MQTT mqtt;
-    private String mac;
+    private MQTT mqtt; ///> Mqtt: se usa para la comunicación con el servidor que almacenará los datos en la base de datos
+    private String mac; ///> Dirección MAC del teléfono
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //Volvemos al tema por defecto de la app
-        setTheme(R.style.AppTheme);
+        setTheme(R.style.AppTheme); ///> Volvemos al tema por defecto de la app para ocultar el splash
         setContentView(R.layout.activity_main);
 
 
@@ -82,18 +84,23 @@ public class MainActivity extends AppCompatActivity {
         ///> Añadir los datos de los sensores
         AddSensorsItems();
 
-
         ///> Inicializar los observadores de los sensores
         InitListener();
 
         ///> Guardar los datos de los sensores
         GuardarDatos();
 
+        ///> Construir la comunicación MQTT
         mqtt = new MQTT("192.168.0.14");
 
+        ///> Obtener la MAC del dispositivo
         getMacAddress();
     }
 
+    /**
+     * Método para añadir el botón en la Toolbar
+     * @param menu Botón para conectar con mqtt
+     * */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -103,6 +110,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Método para añadir funcionalidad al botón de la Toolbar
+     * @param item botón que se ha presionado
+     * */
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         boolean connected = mqtt.init();
@@ -112,6 +123,9 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Método para obtener la MAC del teléfono
+     * */
     public void getMacAddress(){
         WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         WifiInfo wInfo = wifiManager.getConnectionInfo();
@@ -122,11 +136,20 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Método para obtener la MAC del teléfono
+     * @return String MAC
+     * */
     public String getDevice(){
         return mac;
     }
 
 
+    /**
+     * Método para almacenar los datos de un sensor determinado en un fichero
+     * @param filename nombre del fichero
+     * @param data datos a almacenar
+     * */
     public void saveData(String filename, JSONObject data){
 
         File temp;
@@ -150,6 +173,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Método para leer los datos de un fichero
+     * @param filename fichero a leer
+     * */
     public  void readData(String filename){
         try {
             InputStream inputStream = getApplicationContext().openFileInput(filename);
@@ -175,6 +202,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Método para enviar los datos de un fichero por mqtt
+     * @param filename fichero a enviar
+     * */
     public void sendSaveData(String filename){
         try {
             InputStream inputStream = getApplicationContext().openFileInput(filename + ".json");
@@ -193,6 +224,7 @@ public class MainActivity extends AppCompatActivity {
 
                 mqtt.sendMessage(filename, new MqttMessage(stringBuilder.toString().getBytes()));
 
+                ///> Eliminación del fichero para que no se vuelva a mandar más lo mismo
                 File file = new File(getFilesDir(), filename + ".json");
                 file.delete();
 
@@ -209,8 +241,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Método para inicializar los listener de los sensores
+     * */
     public void InitListener(){
+
+        ///> Giroscopio
         Gyroscope.setSensorObserver(new Gyroscope.AWARESensorObserver() {
+
+            /**
+             * Método para detectar un cambio en el giroscopio
+             * */
             @Override
             public void onGyroscopeChanged(ContentValues data) {
                 String x = data.get(Gyroscope_Provider.Gyroscope_Data.VALUES_0).toString();
@@ -244,11 +285,11 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("y", y);
                                 json.put("z", z);
 
-                                if(mqtt.getConnected()) {
+                                if(mqtt.getConnected()) { ///> Hay conexión
                                     sendSaveData("gyroscope");
                                     mqtt.sendMessage("gyroscope", new MqttMessage(json.toString().getBytes()));
                                 }
-                                else{
+                                else{ ///> No hay conexión
                                     saveData("gyroscope", json);
                                 }
                             }catch (Exception e){
@@ -260,7 +301,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ///> Acelerómetro
         Accelerometer.setSensorObserver(new Accelerometer.AWARESensorObserver() {
+            /**
+             * Método para detectar un cambio en el acelerómetro
+             * */
             @Override
             public void onAccelerometerChanged(ContentValues data) {
                 String x = data.get(Accelerometer_Provider.Accelerometer_Data.VALUES_0).toString();
@@ -293,11 +338,11 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("y", y);
                                 json.put("z", z);
 
-                                if(mqtt.getConnected()){
+                                if(mqtt.getConnected()){ ///> Hay conexión
                                     sendSaveData("accelerometer");
                                     mqtt.sendMessage("accelerometer", new MqttMessage(json.toString().getBytes()));
                                 }
-                                else{
+                                else{ ///> No hay conexión
                                     saveData("accelerometer", json);
                                 }
                             } catch (Exception e) {
@@ -309,7 +354,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ///> Localización
         Locations.setSensorObserver(new Locations.AWARESensorObserver() {
+            /**
+             * Método para detectar un cambio en la localización
+             * */
             @Override
             public void onLocationChanged(ContentValues data) {
                 String device = getDevice();
@@ -345,12 +394,11 @@ public class MainActivity extends AppCompatActivity {
                             json.put("altitude", altitude);
                             json.put("accuracy", accuracy);
 
-                            if(mqtt.getConnected()){
+                            if(mqtt.getConnected()){ ///> Hay conexión
                                 sendSaveData("gps");
-
                                 mqtt.sendMessage("gps", new MqttMessage(json.toString().getBytes()));
                             }
-                            else{
+                            else{ ///> No hay conexión
                                 saveData("gps", json);
                             }
                         }catch (Exception e){
@@ -361,7 +409,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ///> Luminosidad
         Light.setSensorObserver(new Light.AWARESensorObserver() {
+            /**
+             * Método para detectar un cambio en la luminosidad
+             * */
             @Override
             public void onLightChanged(ContentValues data) {
                 String lux = data.get(Light_Provider.Light_Data.LIGHT_LUX).toString();
@@ -384,12 +436,12 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("timestamp", timestamp);
                                 json.put("lux", lux);
 
-                                if(mqtt.getConnected()){
+                                if(mqtt.getConnected()){ ///> Hay conexión
                                     sendSaveData("light");
 
                                     mqtt.sendMessage("light", new MqttMessage(json.toString().getBytes()));
                                 }
-                                else{
+                                else{ ///> No hay conexión
                                     saveData("light", json);
                                 }
                             } catch (Exception e) {
@@ -402,7 +454,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ///> Proximidad
         Proximity.setSensorObserver(new Proximity.AWARESensorObserver() {
+            /**
+             * Método para detectar un cambio en la proximidad
+             * */
             @Override
             public void onProximityChanged(ContentValues data) {
                 String device = getDevice();
@@ -424,11 +480,11 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("timestamp", timestamp);
                                 json.put("proximity", proximity);
 
-                                if(mqtt.getConnected()){
+                                if(mqtt.getConnected()){ ///> Hay conexión
                                     sendSaveData("proximity");
                                     mqtt.sendMessage("proximity", new MqttMessage(json.toString().getBytes()));
                                 }
-                                else{
+                                else{ ///> No hay conexión
                                     saveData("proximity", json);
                                 }
                             } catch (Exception e) {
@@ -440,7 +496,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ///> Nivel de batería
         Battery.setSensorObserver(new Battery.AWARESensorObserver() {
+            /**
+             * Método para detectar un cambio en el nivel de batería
+             * */
             @Override
             public void onBatteryChanged(ContentValues data) {
                 String device = getDevice();
@@ -471,11 +531,11 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("voltage", voltage);
                                 json.put("temperature", temperature);
 
-                                if(mqtt.getConnected()){
+                                if(mqtt.getConnected()){ ///> Hay conexión
                                     sendSaveData("battery");
                                     mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
                                 }
-                                else{
+                                else{ ///> No hay conexión
                                     saveData("battery", json);
                                 }
                             } catch (Exception e) {
@@ -486,6 +546,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
+            /**
+             * Método para detectar el reboot del teléfono
+             * */
             @Override
             public void onPhoneReboot() {
                 try {
@@ -493,11 +556,11 @@ public class MainActivity extends AppCompatActivity {
                     json.put("device", getDevice());
                     json.put("timestamp", "reboot");
 
-                    if(mqtt.getConnected()){
+                    if(mqtt.getConnected()){ ///> Hay conexión
                         sendSaveData("battery");
                         mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
                     }
-                    else{
+                    else{ ///> No hay conexión
                         saveData("battery", json);
                     }
                 }catch (Exception e){
@@ -505,6 +568,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
+            /**
+             * Método para detectar el apagado del teléfono
+             * */
             @Override
             public void onPhoneShutdown() {
                 try {
@@ -512,12 +578,11 @@ public class MainActivity extends AppCompatActivity {
                     json.put("device", getDevice());
                     json.put("timestamp", "shutdown");
 
-                    if(mqtt.getConnected()){
+                    if(mqtt.getConnected()){ ///> Hay conexión
                         sendSaveData("battery");
-
                         mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
                     }
-                    else{
+                    else{ ///> No hay conexión
                         saveData("battery", json);
                     }
                 }catch (Exception e){
@@ -525,6 +590,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
+            /**
+             * Método para detectar batería baja
+             * */
             @Override
             public void onBatteryLow() {
                 try {
@@ -532,12 +600,11 @@ public class MainActivity extends AppCompatActivity {
                     json.put("device", getDevice());
                     json.put("timestamp", "battery_low");
 
-                    if(mqtt.getConnected()){
+                    if(mqtt.getConnected()){ ///> Hay conexión
                         sendSaveData("battery");
-
                         mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
                     }
-                    else{
+                    else{ ///> No hay conexión
                         saveData("battery", json);
                     }
 
@@ -546,6 +613,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
+            /**
+             * Método para detectar que se está cargando el teléfono
+             * */
             @Override
             public void onBatteryCharging() {
                 try {
@@ -553,12 +623,11 @@ public class MainActivity extends AppCompatActivity {
                     json.put("device", getDevice());
                     json.put("timestamp", "charging");
 
-                    if(mqtt.getConnected()){
+                    if(mqtt.getConnected()){ ///> Hay conexión
                         sendSaveData("battery");
-
                         mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
                     }
-                    else{
+                    else{ ///> No hay conexión
                         saveData("battery", json);
                     }
                 }catch (Exception e){
@@ -566,6 +635,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
+            /**
+             * Método para detectar que se está descargando el teléfono
+             * */
             @Override
             public void onBatteryDischarging() {
                 try {
@@ -573,11 +645,11 @@ public class MainActivity extends AppCompatActivity {
                     json.put("device", getDevice());
                     json.put("timestamp", "discharging");
 
-                    if(mqtt.getConnected()){
+                    if(mqtt.getConnected()){ //> Hay conexión
                         sendSaveData("battery");
                         mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
                     }
-                    else{
+                    else{ ///> Noo hay conexión
                         saveData("battery", json);
                     }
                 }catch (Exception e){
@@ -586,7 +658,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ///> Barómetro
         Barometer.setSensorObserver(new Barometer.AWARESensorObserver() {
+            /**
+             * Método para detectar un cambio en el barómetro
+             * */
             @Override
             public void onBarometerChanged(ContentValues data) {
                 String device = getDevice();
@@ -608,11 +684,11 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("timestamp", timestamp);
                                 json.put("value", value);
 
-                                if(mqtt.getConnected()){
+                                if(mqtt.getConnected()){ ///> Hay conexión
                                     sendSaveData("barometer");
                                     mqtt.sendMessage("barometer", new MqttMessage(json.toString().getBytes()));
                                 }
-                                else{
+                                else{ ///> No hay conexión
                                     saveData("barometer", json);
                                 }
                             } catch (Exception e) {
@@ -624,7 +700,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ///> Temperatura
         Temperature.setSensorObserver(new Temperature.AWARESensorObserver() {
+            /**
+             * Método para detectar un cambio en la temperatura
+             * */
             @Override
             public void onTemperatureChanged(ContentValues data) {
                 String timestamp = data.getAsString(Temperature_Provider.Temperature_Data.TIMESTAMP);
@@ -645,11 +725,11 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("timestamp", timestamp);
                                 json.put("value", value);
 
-                                if(mqtt.getConnected()){
+                                if(mqtt.getConnected()){ ///> Hay conexión
                                     sendSaveData("temperature");
                                     mqtt.sendMessage("temperature", new MqttMessage(json.toString().getBytes()));
                                 }
-                                else{
+                                else{ ///> No hay conexión
                                     saveData("temperature", json);
                                 }
                             } catch (Exception e) {
@@ -658,13 +738,13 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 }
-
             }
         });
-
     }
 
-
+    /**
+     * Método para añadir los sensores que vamos a monitorizar
+     * */
     public void AddSensorsItems(){
         SharedPreferences myPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         boolean save = myPreferences.getBoolean("save_sensor", false);
@@ -790,8 +870,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     *
-     *
+     * Método para guardar los datos relacionados con los sensores activos e inicativos del teléfono
      **/
     public void GuardarDatos(){
         SharedPreferences myPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
