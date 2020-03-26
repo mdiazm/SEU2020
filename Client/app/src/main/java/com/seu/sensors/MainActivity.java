@@ -554,14 +554,14 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject json = new JSONObject();
                     json.put("device", getDevice());
-                    json.put("timestamp", "reboot");
+                    json.put("value", "reboot");
 
                     if(mqtt.getConnected()){ ///> Hay conexión
-                        sendSaveData("battery");
-                        mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
+                        sendSaveData("status");
+                        mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
                     }
                     else{ ///> No hay conexión
-                        saveData("battery", json);
+                        saveData("status", json);
                     }
                 }catch (Exception e){
                     e.printStackTrace();
@@ -576,14 +576,14 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject json = new JSONObject();
                     json.put("device", getDevice());
-                    json.put("timestamp", "shutdown");
+                    json.put("value", "shutdown");
 
                     if(mqtt.getConnected()){ ///> Hay conexión
-                        sendSaveData("battery");
-                        mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
+                        sendSaveData("status");
+                        mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
                     }
                     else{ ///> No hay conexión
-                        saveData("battery", json);
+                        saveData("status", json);
                     }
                 }catch (Exception e){
                     e.printStackTrace();
@@ -598,14 +598,14 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject json = new JSONObject();
                     json.put("device", getDevice());
-                    json.put("timestamp", "battery_low");
+                    json.put("value", "battery_low");
 
                     if(mqtt.getConnected()){ ///> Hay conexión
-                        sendSaveData("battery");
-                        mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
+                        sendSaveData("status");
+                        mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
                     }
                     else{ ///> No hay conexión
-                        saveData("battery", json);
+                        saveData("status", json);
                     }
 
                 }catch (Exception e){
@@ -621,14 +621,14 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject json = new JSONObject();
                     json.put("device", getDevice());
-                    json.put("timestamp", "charging");
+                    json.put("value", "charging");
 
                     if(mqtt.getConnected()){ ///> Hay conexión
-                        sendSaveData("battery");
-                        mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
+                        sendSaveData("status");
+                        mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
                     }
                     else{ ///> No hay conexión
-                        saveData("battery", json);
+                        saveData("status", json);
                     }
                 }catch (Exception e){
                     e.printStackTrace();
@@ -643,14 +643,14 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject json = new JSONObject();
                     json.put("device", getDevice());
-                    json.put("timestamp", "discharging");
+                    json.put("value", "discharging");
 
                     if(mqtt.getConnected()){ //> Hay conexión
-                        sendSaveData("battery");
-                        mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
+                        sendSaveData("status");
+                        mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
                     }
                     else{ ///> Noo hay conexión
-                        saveData("battery", json);
+                        saveData("status", json);
                     }
                 }catch (Exception e){
                     e.printStackTrace();
