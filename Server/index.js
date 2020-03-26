@@ -102,7 +102,51 @@ app.get('/getLastRecords', function(req, res){
     }
 });
 
+/**
+ * Get physical directions of each client registered in the database.
+ */
+app.get("/getAvailableClients", (req, res) =>{
+
+    var values = database.getAvailableClients();
+    values.then((result) => {
+        return res.send(result);        
+    });
+});
+
+/**
+ * This method is to select device to collect data from the database.
+ */
+app.post("/chooseDevice", (req, res) => {
+
+    // Get device identifier from HTTP header
+    var device = req.body.deviceId;
+
+    // Get session var
+    var sess = req.session;
+
+    // Store device identifier in cookie
+    sess.deviceId = device;
+
+    return res.sendStatus(200);
+});
+
+/**
+ * Get chosen device.
+ */
+app.get("/chosenDevice", (req, res) => {
+    // Get session variable
+    var sess = req.session;
+
+    console.log(sess);
+
+    if(sess.deviceId){
+        return res.send(sess.deviceId);
+    } else {
+        return res.sendStatus(404);
+    }
+})
 // Start server
 app.listen(3000, () => {
     console.log("Server is ON");
 })
+

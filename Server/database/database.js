@@ -4,6 +4,9 @@
 
 const mongoose = require("mongoose");
 
+// Disable deprecations alerts
+mongoose.set('useCreateIndex', true);
+
 // Connect to Database
 mongoose.connect("mongodb://mdmedina:123456@localhost:27017/sensorsDatabase", {useNewUrlParser: true, useUnifiedTopology: true});
 
@@ -114,7 +117,7 @@ var Status = mongoose.model('Status', StatusSchema);
 
 // Devices identifiers
 var DeviceSchema = new Schema({
-    device: {type: String, unique: true, dropDups: true}
+    device: {type: String, unique: true}
 });
 
 var Device = mongoose.model('Device', DeviceSchema);
@@ -167,9 +170,10 @@ module.exports.insertData = insertData;
 /**
  * Get last 'number' records from the specified sensor. 
  * @param MongooseModel sensor to obtain data from
- * @param Integer number of records to query in the database. 
+ * @param Integer number of records to query in the database.
+ * @param {*} device id of the client
  */
-async function getLast(sensor, number){
+async function getLast(sensor, number, device){
     var sensorModel = null;
 
     // Get model to find records.
@@ -202,7 +206,7 @@ async function getLast(sensor, number){
 
     // Perform query in the database on the specified model
     if(sensorModel != null){
-        var value = await sensorModel.find()
+        var value = await sensorModel.find({"device": device})
         .sort("-timestamp")
         .limit(number);
         return value;
@@ -219,8 +223,9 @@ module.exports.getLast = getLast;
  * last saved until specified seconds in the past.
  * @param {*} sensor id of the sensor to recover information from.
  * @param {*} seconds size of the time frame.
+ * @param {*} device id of the client
  */
-async function getLastRecordsInSeconds(sensor, seconds){
+async function getLastRecordsInSeconds(sensor, seconds, device){
     var sensorModel = null;
 
     // Get model to find records.
@@ -253,11 +258,11 @@ async function getLastRecordsInSeconds(sensor, seconds){
 
     // Perform query in the database on the specified model
     if(sensorModel != null){
-        var interval = await sensorModel.findOne().sort({"timestamp": -1});
+        var interval = await sensorModel.findOne({"device": device}).sort({"timestamp": -1});
 
         interval = new Date(interval.timestamp - seconds * 1000);
 
-        const data = await sensorModel.find({"timestamp" : {$gt: interval.toISOString()}}, {}, {sort: {"timestamp": -1}}, function(error, data){
+        const data = await sensorModel.find({"timestamp" : {$gt: interval.toISOString()}, "device": device}, {}, {sort: {"timestamp": -1}}, function(error, data){
             return data == null ? data : null;
         });
 
@@ -308,3 +313,16 @@ function getSensorsIdentifiers(){
 }
 
 module.exports.getSensorsIdentifiers = getSensorsIdentifiers;
+
+/**
+ * Function to get available clients from the database. Those clients will be shown in the user interface (or web client).
+ */
+async function getAvailableClients(){
+    var devices = await Device.find((error, data) => {
+        return data;
+    });
+
+    return devices;
+}
+
+module.exports.getAvailableClients = getAvailableClients;
