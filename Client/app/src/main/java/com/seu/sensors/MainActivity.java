@@ -91,8 +91,8 @@ public class MainActivity extends AppCompatActivity {
         GuardarDatos();
 
         ///> Construir la comunicación MQTT
-        mqtt = new MQTT("192.168.0.14");
-
+        //mqtt = new MQTT("192.168.0.14");
+        mqtt = new MQTT("178.62.241.158");
         ///> Obtener la MAC del dispositivo
         getMacAddress();
     }
@@ -222,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
 
                 inputStream.close();
 
-                mqtt.sendMessage(filename, new MqttMessage(stringBuilder.toString().getBytes()));
+                mqtt.sendMessageCollection(filename, new MqttMessage(stringBuilder.toString().getBytes()));
 
                 ///> Eliminación del fichero para que no se vuelva a mandar más lo mismo
                 File file = new File(getFilesDir(), filename + ".json");

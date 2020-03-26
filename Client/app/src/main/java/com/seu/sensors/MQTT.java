@@ -131,6 +131,42 @@ public class MQTT implements MqttCallback {
         }
     }
 
+    public void sendMessageCollection(String sensor, MqttMessage message){
+        if(connected) { ///> Está conectado --> Envío
+            try {
+                Log.d("MQTT", sensor);
+                client.publish("send/collection/" + sensor, message);
+
+            } catch (MqttException e) {
+                ///> Se pierde la conexión
+                e.printStackTrace();
+                connected = false;
+                try {
+                    client.disconnect();
+                } catch (MqttException er) {
+                    er.printStackTrace();
+                }
+            }
+        }else { ///> No hay conexión --> Conecto y envío
+            try {
+                this.client = new MqttClient("tcp://" + ip + ":1883", "", new MemoryPersistence());
+                client.setCallback( this);
+                client.connect();
+                sendMessageCollection(sensor,message);
+            } catch (MqttException e) {
+                ///> Se pierde la conexión
+                e.printStackTrace();
+                connected = false;
+                try {
+                    client.disconnect();
+                } catch (MqttException err) {
+                    err.printStackTrace();
+                }
+            }
+
+        }
+    }
+
     /**
      * Método para obtener el estado de conexión de MQTT
      * @return true si está conectado, false en otro caso
