@@ -7,8 +7,10 @@ import {
   Route,
   Link
 } from "react-router-dom";
+import Sensors from './sensors.js';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { Container, Col, Navbar, Nav, Row } from 'react-bootstrap';
 import CanvasJSReact from './assets/canvasjs.react';
 
 var CanvasJS = CanvasJSReact.CanvasJS;
@@ -17,73 +19,35 @@ var CanvasJSChart = CanvasJSReact.CanvasJSChart;
 class NavBarMenu extends Component {
   render() {
     return(
-      <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
-        <a class="navbar-brand" href="#">
+      <Navbar bg="dark" className="sticky-top flex-md-nowrap p-0">
+        <Navbar.Brand href="/">
           <img src="/docs/4.4/assets/brand/bootstrap-solid.svg" width="30" height="30" class="d-inline-block align-top" alt=""/>
           Sensor-app
-        </a>
-      </nav>
+        </Navbar.Brand>
+      </Navbar>
     )
   }
 }
 
 class SideBar extends Component {
+  state = {
+    sensors: []
+  }
+
+  componentDidMount() {
+    fetch('https://cors-anywhere.herokuapp.com/http://178.62.241.158:3000/getAvailableSensors')
+    .then(res => res.json())
+    .then((data) => {
+      this.setState({ sensors: data})
+    })
+    .catch(console.log)
+  }
+
   render() {
     return(
-      <div class="container-fluid">
-        <div class="row">
-          <nav class="col-md-2 d-none d-md-block bg-light sidebar">
-            <div class="sidebar-sticky">
-              <ul class="nav flex-column">
-                <li class="nav-item">
-                  <Link to="/" class="nav-link">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home"></svg>
-                    Inicio
-                  </Link>
-                </li>
-              </ul>
-
-              <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                <span>Sensores</span>
-              </h6>
-              <ul class="nav flex-column mb-2">
-                <li class="nav-item">
-                  <Link to="/acelerometro" class="nav-link">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home"></svg>
-                    Acelerómetro
-                  </Link>
-                </li>
-                <li class="nav-item">
-                  <Link to="/giroscopio" class="nav-link">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home"></svg>
-                    Giroscopio
-                  </Link>
-                </li>
-                <li class="nav-item">
-                  <Link to="/acelerometro" class="nav-link">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home"></svg>
-                    Luminosidad
-                  </Link>
-                </li>
-              </ul>
-              
-            </div>
-          </nav>
-          <div class="col-md-10">
-          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom px-2 py-2">
-            <h1 class="h2">Inicio</h1>
-            <div class="btn-toolbar mb-2 mb-md-0">
-              <div class="btn-group mr-2">
-                <button class="btn btn-sm btn-outline-secondary">Compatir</button>
-                <button class="btn btn-sm btn-outline-secondary">Exportar</button>
-              </div>
-            </div>
-          </div>
-            <Graphic />
-            <Graphic2 />
-          </div>
-        </div>
-      </div>
+      <Nav defaultActiveKey="#" className="flex-column">
+        <Sensors sensors={this.state.sensors} />
+      </Nav>
     )
   }
 }
@@ -101,6 +65,7 @@ class Graphic extends Component {
                     { label: "Orange", y: 15  },
                     { label: "Banana", y: 25  },
                     { label: "Mango",  y: 30  },
+                    { label: "Grape",  y: 28  },
                     { label: "Grape",  y: 28  }
                 ]
         }]
@@ -108,34 +73,7 @@ class Graphic extends Component {
     
     return (
       <div>
-        <CanvasJSChart options = {options}
-            /* onRef = {ref => this.chart = ref} */
-        />
-      </div>
-    );
-  }
-}
-
-class Graphic2 extends Component {
-  render() {
-    const options = {
-      title: {
-        text: "Basic Spline Chart in React"
-      },
-      data: [{				
-                type: "spline",
-                dataPoints: [
-                    { label: "Apple",  y: 10  },
-                    { label: "Orange", y: 15  },
-                    { label: "Banana", y: 25  },
-                    { label: "Mango",  y: 30  },
-                    { label: "Grape",  y: 28  }
-                ]
-        }]
-    }
-    
-    return (
-      <div>
+        {this.props.name}
         <CanvasJSChart options = {options}
             /* onRef = {ref => this.chart = ref} */
         />
@@ -149,7 +87,29 @@ class Main extends Component {
     return(
       <main>
         <NavBarMenu />
-        <SideBar />
+        <Container>
+          <Row>
+            <SideBar />
+          </Row>
+        </Container>
+      </main>
+    )
+  }
+}
+
+class Gyroscope extends Component {
+  render() {
+    return(
+      <main>
+        <NavBarMenu />
+        <Container>
+          <Row>
+            <SideBar />
+            <Col sm={10}>
+              <Graphic/>
+            </Col>
+          </Row>
+        </Container>
       </main>
     )
   }
@@ -163,14 +123,17 @@ class App extends Component {
           <Route exact path="/">
             <Main />
           </Route>
-          <Route exact path="/acelerometro">
-            <h1>ACELERÓMETRO</h1>
+          <Route exact path="/gyroscope">
+            <Gyroscope />
           </Route>
-          <Route exact path="/giroscopio">
-            <h1>GIROSCOPIO</h1>
+          <Route exact path="/proximity">
+            <Gyroscope />
           </Route>
-          <Route exact path="/luminosidad">
-            <h1>LUMINOSIDAD</h1>
+          <Route exact path="/Accelerometer">
+            <Gyroscope />
+          </Route>
+          <Route exact path="/light">
+            <Gyroscope />
           </Route>
         </Switch>
       </Router>
