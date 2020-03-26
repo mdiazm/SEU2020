@@ -39,17 +39,22 @@ import com.aware.providers.Light_Provider;
 import com.aware.providers.Locations_Provider;
 import com.aware.providers.Proximity_Provider;
 import com.aware.providers.Temperature_Provider;
-
-import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.lang.Math;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
-    private RecyclerView mRecyclerView;
+
     private MyAdapter mAdapter;
     ArrayList<Object> arrayList = new ArrayList<>();
 
@@ -121,6 +126,89 @@ public class MainActivity extends AppCompatActivity {
         return mac;
     }
 
+
+    public void saveData(String filename, JSONObject data){
+
+        File temp;
+        try
+        {
+            temp = File.createTempFile(filename, ".json");
+
+            boolean exists = temp.exists();
+
+            if(!exists){
+                new File(getApplicationContext().getFilesDir(), filename + ".json");
+            }
+
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getApplicationContext().openFileOutput(filename + ".json", Context.MODE_APPEND));
+            outputStreamWriter.write(data.toString());
+            outputStreamWriter.close();
+
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public  void readData(String filename){
+        try {
+            InputStream inputStream = getApplicationContext().openFileInput(filename);
+
+            if ( inputStream != null ) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ( (receiveString = bufferedReader.readLine()) != null ) {
+                    stringBuilder.append("\n").append(receiveString);
+                }
+
+                inputStream.close();
+
+            }
+        }
+        catch (FileNotFoundException e) {
+            Log.e("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.e("login activity", "Can not read file: " + e.toString());
+        }
+    }
+
+    public void sendSaveData(String filename){
+        try {
+            InputStream inputStream = getApplicationContext().openFileInput(filename + ".json");
+
+            if ( inputStream != null ) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ( (receiveString = bufferedReader.readLine()) != null ) {
+                    stringBuilder.append("\n").append(receiveString);
+                }
+
+                inputStream.close();
+
+                mqtt.sendMessage(filename, new MqttMessage(stringBuilder.toString().getBytes()));
+
+                File file = new File(getFilesDir(), filename + ".json");
+                file.delete();
+
+                File temp = File.createTempFile(filename, ".json");
+                temp.exists();
+                temp.delete();
+
+            }
+        }
+        catch (FileNotFoundException e) {
+            Log.e("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.e("login activity", "Can not read file: " + e.toString());
+        }
+    }
+
     public void InitListener(){
         Gyroscope.setSensorObserver(new Gyroscope.AWARESensorObserver() {
             @Override
@@ -157,10 +245,11 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("z", z);
 
                                 if(mqtt.getConnected()) {
+                                    sendSaveData("gyroscope");
                                     mqtt.sendMessage("gyroscope", new MqttMessage(json.toString().getBytes()));
                                 }
                                 else{
-                                    Log.d("MQTT", "no hay conexion");
+                                    saveData("gyroscope", json);
                                 }
                             }catch (Exception e){
                                 e.printStackTrace();
@@ -205,10 +294,11 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("z", z);
 
                                 if(mqtt.getConnected()){
+                                    sendSaveData("accelerometer");
                                     mqtt.sendMessage("accelerometer", new MqttMessage(json.toString().getBytes()));
                                 }
                                 else{
-                                    Log.d("MQTT", "no hay conexion");
+                                    saveData("accelerometer", json);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -256,10 +346,12 @@ public class MainActivity extends AppCompatActivity {
                             json.put("accuracy", accuracy);
 
                             if(mqtt.getConnected()){
+                                sendSaveData("gps");
+
                                 mqtt.sendMessage("gps", new MqttMessage(json.toString().getBytes()));
                             }
                             else{
-                                Log.d("MQTT", "no hay conexion");
+                                saveData("gps", json);
                             }
                         }catch (Exception e){
                             e.printStackTrace();
@@ -293,10 +385,12 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("lux", lux);
 
                                 if(mqtt.getConnected()){
+                                    sendSaveData("light");
+
                                     mqtt.sendMessage("light", new MqttMessage(json.toString().getBytes()));
                                 }
                                 else{
-                                    Log.d("MQTT", "no hay conexion");
+                                    saveData("light", json);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -331,10 +425,11 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("proximity", proximity);
 
                                 if(mqtt.getConnected()){
+                                    sendSaveData("proximity");
                                     mqtt.sendMessage("proximity", new MqttMessage(json.toString().getBytes()));
                                 }
                                 else{
-                                    Log.d("MQTT", "no hay conexion");
+                                    saveData("proximity", json);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -377,10 +472,11 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("temperature", temperature);
 
                                 if(mqtt.getConnected()){
-                                mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
+                                    sendSaveData("battery");
+                                    mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
                                 }
                                 else{
-                                    Log.d("MQTT", "no hay conexion");
+                                    saveData("battery", json);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -398,10 +494,11 @@ public class MainActivity extends AppCompatActivity {
                     json.put("timestamp", "reboot");
 
                     if(mqtt.getConnected()){
+                        sendSaveData("battery");
                         mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
                     }
                     else{
-                        Log.d("MQTT", "no hay conexion");
+                        saveData("battery", json);
                     }
                 }catch (Exception e){
                     e.printStackTrace();
@@ -416,10 +513,12 @@ public class MainActivity extends AppCompatActivity {
                     json.put("timestamp", "shutdown");
 
                     if(mqtt.getConnected()){
+                        sendSaveData("battery");
+
                         mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
                     }
                     else{
-                        Log.d("MQTT", "no hay conexion");
+                        saveData("battery", json);
                     }
                 }catch (Exception e){
                     e.printStackTrace();
@@ -434,10 +533,12 @@ public class MainActivity extends AppCompatActivity {
                     json.put("timestamp", "battery_low");
 
                     if(mqtt.getConnected()){
+                        sendSaveData("battery");
+
                         mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
                     }
                     else{
-                    Log.d("MQTT", "no hay conexion");
+                        saveData("battery", json);
                     }
 
                 }catch (Exception e){
@@ -453,10 +554,12 @@ public class MainActivity extends AppCompatActivity {
                     json.put("timestamp", "charging");
 
                     if(mqtt.getConnected()){
+                        sendSaveData("battery");
+
                         mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
                     }
                     else{
-                        Log.d("MQTT", "no hay conexion");
+                        saveData("battery", json);
                     }
                 }catch (Exception e){
                     e.printStackTrace();
@@ -471,10 +574,11 @@ public class MainActivity extends AppCompatActivity {
                     json.put("timestamp", "discharging");
 
                     if(mqtt.getConnected()){
+                        sendSaveData("battery");
                         mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
                     }
                     else{
-                        Log.d("MQTT", "no hay conexion");
+                        saveData("battery", json);
                     }
                 }catch (Exception e){
                     e.printStackTrace();
@@ -505,10 +609,11 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("value", value);
 
                                 if(mqtt.getConnected()){
+                                    sendSaveData("barometer");
                                     mqtt.sendMessage("barometer", new MqttMessage(json.toString().getBytes()));
                                 }
                                 else{
-                                    Log.d("MQTT", "no hay conexion");
+                                    saveData("barometer", json);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -541,10 +646,11 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("value", value);
 
                                 if(mqtt.getConnected()){
+                                    sendSaveData("temperature");
                                     mqtt.sendMessage("temperature", new MqttMessage(json.toString().getBytes()));
                                 }
                                 else{
-                                    Log.d("MQTT", "no hay conexion");
+                                    saveData("temperature", json);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -698,7 +804,6 @@ public class MainActivity extends AppCompatActivity {
         editor.putBoolean(((Sensor)arrayList.get(5)).getKey(),((Sensor) arrayList.get(5)).getState());
         editor.putBoolean(((Sensor)arrayList.get(6)).getKey(),((Sensor) arrayList.get(6)).getState());
         editor.putBoolean(((Sensor)arrayList.get(7)).getKey(), ((Sensor) arrayList.get(7)).getState());
-        editor.putBoolean(((Sensor)arrayList.get(8)).getKey(),((Sensor) arrayList.get(8)).getState());
         editor.putBoolean("save_sensor", true);
 
         editor.commit();

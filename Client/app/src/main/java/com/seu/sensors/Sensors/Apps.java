@@ -35,12 +35,4 @@ public class Apps extends Sensor {
         super.setName(name);
     }
 
-    public String getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(String timestamp) {
-        this.timestamp = timestamp;
-    }
-
 }
