@@ -29,7 +29,7 @@ app.get('/getLastRecordsInFrame', function(req, res){
             var sensorName = req.query.sensorName;
             var secondsFrame = Number(req.query.secondsFrame);
     
-            var data = database.getLastRecordsInSeconds(sensorName, secondsFrame);
+            var data = database.getLastRecordsInSeconds(sensorName, secondsFrame, sess.deviceId);
     
             // Send data in JSON format
             data.then(result => {
@@ -86,7 +86,7 @@ app.get('/getLastRecords', function(req, res){
             var sensorName = req.query.sensorName;
             var recordsNumber = Number(req.query.recordsNumber);
     
-            var data = database.getLast(sensorName, recordsNumber);
+            var data = database.getLast(sensorName, recordsNumber, sess.deviceId);
     
             // Send data in JSON format
             data.then(result => {
