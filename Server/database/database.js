@@ -148,6 +148,9 @@ function insertData(data){
     data.save((err, item) => {
         if(err) return console.error(err);
     })
+
+    // Update available collections.
+    getSensorsIdentifiers();
 }
 
 // Export function to insert data
@@ -262,6 +265,7 @@ module.exports.getLastRecordsInSeconds = getLastRecordsInSeconds;
 
 
 function getSensorsIdentifiers(){
+    availableSensors = [];
     db.db.listCollections().toArray(function(err, names){
         names.forEach(function(value, index, array){
             var sensorName = value.name.toLowerCase();
@@ -297,3 +301,5 @@ function getSensorsIdentifiers(){
         module.exports.availableSensors = availableSensors;
     });
 }
+
+module.exports.getSensorsIdentifiers = getSensorsIdentifiers;
