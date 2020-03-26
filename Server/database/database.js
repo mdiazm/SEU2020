@@ -144,7 +144,8 @@ module.exports.Models = {
     Proximity,
     Battery,
     Barometer,
-    Status
+    Status,
+    Device
 };
 
 /**
@@ -169,7 +170,6 @@ module.exports.insertData = insertData;
  * @param Integer number of records to query in the database. 
  */
 async function getLast(sensor, number){
-
     var sensorModel = null;
 
     // Get model to find records.
@@ -221,7 +221,6 @@ module.exports.getLast = getLast;
  * @param {*} seconds size of the time frame.
  */
 async function getLastRecordsInSeconds(sensor, seconds){
-    
     var sensorModel = null;
 
     // Get model to find records.
@@ -269,7 +268,6 @@ async function getLastRecordsInSeconds(sensor, seconds){
 }
 
 module.exports.getLastRecordsInSeconds = getLastRecordsInSeconds;
-
 
 function getSensorsIdentifiers(){
     availableSensors = [];

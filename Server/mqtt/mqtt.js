@@ -9,7 +9,9 @@ var client = mqtt.connect('tcp://localhost'); // MQTT Broker url (via TCP)
 // Possible actions
 const Actions = {
     SEND: 'send',
-    REQUEST: 'request'
+    REQUEST: 'request',
+    REGISTER: 'register', 
+    COLLECTION: 'collection'
 };
 
 // Sensors
@@ -34,9 +36,14 @@ client.on('message', (topic, message) => {
     if(elements.length == 3){
         if(action === Actions.SEND){
             // Code to store user data
-            parseReceivedMessage(sensor, message.toString());
+            parseReceivedRegister(sensor, message.toString());
         } else if(action === Actions.REQUEST){
             // Code to send requested information to Android Client
+        } else if(action === Actions.REGISTER) {
+            // Register device 
+            registerDevice(message);
+        } else if(action === Actions.COLLECTION) {
+            // Receive a collection of registers.
         }
     }
 });
@@ -47,8 +54,7 @@ client.on('message', (topic, message) => {
  * @param sensor which sent the information
  * @param data string formatted as json with the information from each sensor
  */
-
- function parseReceivedMessage(sensor, data){
+ function parseReceivedRegister(sensor, data){
 
     var json = JSON.parse(data);
 
@@ -151,4 +157,19 @@ client.on('message', (topic, message) => {
         default:
             console.log("No existing behavior for this sensor: " + sensor);
     }
- }
+}
+
+/**
+ * Function to register a mobile phone within the system. This will be called when the mobile connects to MQTT broker.
+ * @param json message 
+ */
+function registerDevice(message){
+
+    var json = json.parse(message);
+
+    var values = new Models.Device({
+        device: json.device
+    });
+
+    InsertData(values);
+}
