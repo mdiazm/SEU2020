@@ -3,6 +3,11 @@ const bodyParser = require("body-parser");
 const app = express();
 const mqtt = require('./mqtt/mqtt');
 const database = require("./database/database");
+const session = require("express-session");
+
+// Configure sessions
+app.use(session({secret: "cookie", saveUninitialized: true, resave: true}));
+app.use(bodyParser.json());
 
 // API GET Methods
 
@@ -11,57 +16,89 @@ const database = require("./database/database");
  * EXAMPLE Format of the request: ip:3000/getLastInFrame?sensorName=accelerometer&secondsFrame=5
  */
 app.get('/getLastRecordsInFrame', function(req, res){
+    // Get session variable
+    var sess = req.session;
 
-    if(database.databaseReady){
-        var sensorName = req.query.sensorName;
-        var secondsFrame = Number(req.query.secondsFrame);
+    // Check if user set a device-id. 
+    if(sess.deviceId){
+        if(database.databaseReady){
+            if (!req.query.sensorName || !req.query.secondsFrame){
+                return res.send("Missing parameters. Example: /getLastInFrame?sensorName=accelerometer&secondsFrame=5");
+            }
 
-        var data = database.getLastRecordsInSeconds(sensorName, secondsFrame);
-
-        // Send data in JSON format
-        data.then(result => {
-            res.json(result);
-        });
-
+            var sensorName = req.query.sensorName;
+            var secondsFrame = Number(req.query.secondsFrame);
+    
+            var data = database.getLastRecordsInSeconds(sensorName, secondsFrame);
+    
+            // Send data in JSON format
+            data.then(result => {
+                return res.json(result);
+            });
+    
+        } else {
+            var result = "Database is starting";
+            return res.send(result);
+        }
     } else {
-    var result = "Database is starting";
-    res.send(result);
-}
+        return res.send(null);
+    }
 });
 
 /**
  * GET to obtain available sensors
  */
 app.get("/getAvailableSensors", function(req, res){
-    if(database.databaseReady){
-        var sensorNames = database.availableSensors;
-        res.json(sensorNames);
+    // Get session variable.
+    var sess = req.session;
+
+    // If session variable is defined.
+    if(sess.deviceId){
+        if(database.databaseReady){
+            var sensorNames = database.availableSensors;
+            return res.json(sensorNames);
+        } else {
+            var result = "Database is starting";
+            return res.send(result);
+        }
     } else {
-        var result = "Database is starting";
-        res.send(result);
+        return res.send(null);
     }
 })
 
 /**
- * GET to obtain a specified number of records in  
- * EXAMPLE Format of the request: ip:3000/getLastInFrame?sensorName=accelerometer&secondsFrame=5
+ * GET to obtain a specified number of records starting from the last stored.
+ * EXAMPLE Format of the request: ip:3000/getLastRecords?sensorName=accelerometer&recordsNumber=5
  */
 app.get('/getLastRecords', function(req, res){
+    // Get session variable
+    var sess = req.session;
 
-    if(database.databaseReady){
-        var sensorName = req.query.sensorName;
-        var recordsNumber = Number(req.query.recordsNumber);
+    // Check if user set a device-id. 
 
-        var data = database.getLast(sensorName, recordsNumber);
+    if (sess.deviceId){
+        if(database.databaseReady){
+            // Check if parameters are written in a correct way.
+            if (!req.query.sensorName || !req.query.recordsNumber){
+                return res.send("Missing parameters. Example: /getLastRecords?sensorName=accelerometer&recordsNumber=5");
+            }
 
-        // Send data in JSON format
-        data.then(result => {
-            res.json(result);
-        });
-
+            var sensorName = req.query.sensorName;
+            var recordsNumber = Number(req.query.recordsNumber);
+    
+            var data = database.getLast(sensorName, recordsNumber);
+    
+            // Send data in JSON format
+            data.then(result => {
+                return res.json(result);
+            });
+    
+        } else {
+            var result = "Database is starting";
+            return res.send(result);
+        }
     } else {
-        var result = "Database is starting";
-        res.send(result);
+        return res.send(null);
     }
 });
 

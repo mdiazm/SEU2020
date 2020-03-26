@@ -112,6 +112,13 @@ var StatusSchema = new Schema({
 
 var Status = mongoose.model('Status', StatusSchema);
 
+// Devices identifiers
+var DeviceSchema = new Schema({
+    device: {type: String, unique: true, dropDups: true}
+});
+
+var Device = mongoose.model('Device', DeviceSchema);
+
 /** Functions to store and load data in/from the database */
 
 // Sensors enum
