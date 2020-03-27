@@ -14,6 +14,9 @@ const Actions = {
     COLLECTION: 'collection'
 };
 
+// Configure caller from index script.
+var emitMessage = null;
+
 // Sensors
 const Sensors = database.Sensors;
 
@@ -160,6 +163,9 @@ client.on('message', (topic, message) => {
         default:
             console.log("No existing behavior for this sensor: " + sensor);
     }
+
+    // Emit message
+    distributeDataRealTime(json.device, sensor, data);
 }
 
 /**
@@ -171,11 +177,13 @@ client.on('message', (topic, message) => {
 function parseReceivedCollection(sensor, data){
 
     // Split text into lines (each line is a different record.)
-    var values = data.split("\n");
+    data = '[' + data.replace(/}{/g, '},{') + ']';
+    var values = JSON.parse(data);
+    console.log(values.length);
 
     // Store each line as a record independently.
     values.forEach((value, index, array) => {
-        var json = JSON.parse(value);
+        var json = value;
 
         switch(sensor){
             case Sensors.ACCELEROMETER: 
@@ -276,6 +284,9 @@ function parseReceivedCollection(sensor, data){
             default:
                 console.log("No existing behavior for this sensor: " + sensor);
         }
+
+        // Distribute data
+        distributeDataRealTime(json.device, sensor, data);
     });
 }
 
@@ -285,11 +296,39 @@ function parseReceivedCollection(sensor, data){
  */
 function registerDevice(message){
 
-    var json = json.parse(message);
+    var json = JSON.parse(message);
 
     var values = new Models.Device({
         device: json.device
     });
 
     InsertData(values);
+}
+
+/**
+ * Function to configure emitter. This is, every times that a mqtt message is received, emitMessage() function,
+ * which is defined in index.js, will be called to distribute new content in real time across the users which
+ * are requesting information about.
+ * @param emitter callback associated to WebSocket that will distribute the data.
+ */
+function configureEmitter(emitter){
+    emitMessage = emitter;
+}
+
+module.exports.configureEmitter = configureEmitter;
+
+/**
+ * Function to send information in realtime via websockets
+ * @param {} device owner of the information
+ * @param {*} sensor generator of the information
+ * @param {*} data to distribute
+ */
+function distributeDataRealTime(device, sensor, data){
+
+    var values = {
+        "sensor": sensor, 
+        "data": data
+    }
+
+    emitMessage(device, values);
 }

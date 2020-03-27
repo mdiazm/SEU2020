@@ -20,6 +20,7 @@ public class MQTT implements MqttCallback {
     private String send_topic; ///> Topic al que enviar
     private Boolean connected = false; ///> Estado de la conexión
     private String register_topic; ///> Topic para registrarse
+    private String collection_topic; ///> Topic para enviar colecciones
 
     /**
      * Constructor parametrizado
@@ -28,8 +29,10 @@ public class MQTT implements MqttCallback {
      */
     public MQTT(String ip) {
         this.ip = ip;
+
         send_topic = "sensors/send/";
         this.register_topic = "sensors/register";
+        this.collection_topic = "sensors/collection/";
         try {
             this.client = new MqttClient("tcp://" + ip + ":1883", "", new MemoryPersistence());
             client.setCallback(this);
@@ -139,7 +142,7 @@ public class MQTT implements MqttCallback {
         if (connected) { ///> Está conectado --> Envío
             try {
                 Log.d("MQTT", sensor);
-                client.publish("send/collection/" + sensor, message);
+                client.publish(collection_topic + sensor, message);
 
             } catch (MqttException e) {
                 ///> Se pierde la conexión

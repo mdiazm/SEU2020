@@ -5,6 +5,7 @@ const mqtt = require('./mqtt/mqtt');
 const database = require("./database/database");
 const server = require('http').Server(app);
 const session = require("express-session");
+const io = require('socket.io')(server);
 
 // Configure sessions
 app.use(session({secret: "cookie", saveUninitialized: true, resave: true}));
@@ -137,7 +138,7 @@ app.post("/chooseDevice", (req, res) => {
 app.get("/chosenDevice", (req, res) => {
     // Get session variable
     var sess = req.session;
-    
+
     if(sess.deviceId){
         return res.send(sess.deviceId);
     } else {
@@ -186,6 +187,34 @@ app.get("/getDataOnDate", (req, res) => {
         return res.sendStatus(404);
     }
 })
+
+// Create sockets to receive updates in real time.
+io.on('connection', (socket) =>{
+    console.log("Alguien se ha conectado con sockets");
+
+    socket.on('subscribe', (room) =>{
+        socket.join(room);
+        console.log("Alguien se ha suscrito a la sala: " + room);
+    });
+
+    socket.on("unsubscribe", (room) => {
+        socket.leave(room);
+        console.log("Alguien ha borrado su suscripción.");
+    })
+});
+
+/**
+ * This function will put the data object in room (from websocket) specified in device parameter.
+ * @param {*} device room to put the data in.
+ * @param {*} data data to put in the room, containing information about the sensors in realtime.
+ */
+function distributeData(device, data){
+    console.log("This function is being called: " + data);
+
+    io.in(device).emit("message", data);
+}
+
+mqtt.configureEmitter(distributeData);
 
 // Start server
 server.listen(3000, () => {
