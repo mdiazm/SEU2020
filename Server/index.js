@@ -145,8 +145,50 @@ app.get("/chosenDevice", (req, res) => {
         return res.sendStatus(404);
     }
 })
+
+app.get("/getDataOnDate", (req, res) => {
+    var sess = req.session;
+
+    if(sess.deviceId){
+        
+        var startDate;
+        var endDate;
+        var sensorName = req.query.sensorName;
+        var device = sess.deviceId;
+
+        // Check if parameters were written in a correct way.
+        if(!req.query.startDate && !req.query.endDate){
+            return res.send(404);
+        } else if (!req.query.startDate){
+            return res.send(404);
+        } else if (!req.query.endDate){
+            endDate = null;
+        }
+
+        // Call to one method or another depending on endDate == null
+
+        if(endDate == null){
+            // endDate was not defined
+            var data = database.getDataInDay(device, sensorName, startDate).then((result) =>{
+                return result;
+            })
+
+            return res.json(data);
+        } else {
+            // endDate was defined so we should call a different method.
+            var data = database.getDataInInterval(device, sensorName, startDate, endDate).then((result) =>{
+                return result;
+            })
+
+            return res.json(data);
+        }
+
+    } else {
+        return res.sendStatus(404);
+    }
+})
+
 // Start server
 app.listen(3000, () => {
     console.log("Server is ON");
 })
-

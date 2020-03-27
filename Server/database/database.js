@@ -306,3 +306,128 @@ async function getAvailableClients(){
 }
 
 module.exports.getAvailableClients = getAvailableClients;
+
+/**
+ * Retrieve data from the specified sensor to the specified user in a time interval.
+ * @param {*} device MAC address of the client
+ * @param {*} sensor sensor to retrieve data from
+ * @param {*} start start date of the interval
+ * @param {*} end end date of the interval.
+ */
+async function getDataInInterval(device, sensor, start, end){
+
+    // Set granularity of the interval
+    var startDate = new Date(start);
+    startDate.setHours(00, 00, 00);
+
+    var endDate = new Date(end);
+    endDate.setHours(23, 59, 59);
+
+    // Perform query on the database
+    var sensorModel = null;
+
+    // Get model to find records.
+    switch(sensor){
+        case Sensors.ACCELEROMETER:
+            sensorModel = Accelerometer;
+            break;
+        case Sensors.GYROSCOPE:
+            sensorModel = Gyroscope;
+            break;
+        case Sensors.GPS:
+            sensorModel = GPS;
+            break;
+        case Sensors.LIGHT:
+            sensorModel = Light;
+            break;
+        case Sensors.PROXIMITY:
+            sensorModel = Proximity;
+            break;
+        case Sensors.BATTERY:
+            sensorModel = Battery;
+            break;
+        case Sensors.BAROMETER:
+            sensorModel = Barometer;
+            break;
+        case Sensors.STATUS:
+            sensorModel = Status;
+            break;
+    }
+
+    // Perform query in the database on the specified model
+    if(sensorModel != null){
+
+        const data = await sensorModel.find({"timestamp" : {$gte: startDate.toISOString(), $lte: endDate.toISOString()}, 
+        "device": device}, {}, {sort: {"timestamp": -1}}, function(error, data){
+            return data == null ? data : null;
+        });
+
+        return data;
+    } else {
+        return null;
+    }
+}
+
+module.exports.getDataInInterval = getDataInInterval;
+
+/**
+ * Retrieve all records in day specified in day parameter.
+ * @param {*} device MAC address of the client
+ * @param {*} sensor sensor to retrieve data from
+ * @param {*} day to retrieve data from.
+ */
+async function getDataInDay(device, sensor, day){
+
+    // Set granularity of the interval
+    var startDate = new Date(day);
+    startDate.setHours(00, 00, 00);
+
+    var endDate = new Date(day);
+    endDate.setHours(23, 59, 59);
+
+    // Perform query on the database
+    var sensorModel = null;
+
+    // Get model to find records.
+    switch(sensor){
+        case Sensors.ACCELEROMETER:
+            sensorModel = Accelerometer;
+            break;
+        case Sensors.GYROSCOPE:
+            sensorModel = Gyroscope;
+            break;
+        case Sensors.GPS:
+            sensorModel = GPS;
+            break;
+        case Sensors.LIGHT:
+            sensorModel = Light;
+            break;
+        case Sensors.PROXIMITY:
+            sensorModel = Proximity;
+            break;
+        case Sensors.BATTERY:
+            sensorModel = Battery;
+            break;
+        case Sensors.BAROMETER:
+            sensorModel = Barometer;
+            break;
+        case Sensors.STATUS:
+            sensorModel = Status;
+            break;
+    }
+
+    // Perform query in the database on the specified model
+    if(sensorModel != null){
+
+        const data = await sensorModel.find({"timestamp" : {$gte: startDate.toISOString(), $lte: endDate.toISOString()}, 
+        "device": device}, {}, {sort: {"timestamp": -1}}, function(error, data){
+            return data == null ? data : null;
+        });
+
+        return data;
+    } else {
+        return null;
+    }
+}
+
+module.exports.getDataInDay = getDataInDay;
