@@ -117,6 +117,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
+        item.set
         if(mqtt.getConnected()){
             mqtt.disconnected();
         }else {
