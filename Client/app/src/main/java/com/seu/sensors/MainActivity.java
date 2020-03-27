@@ -119,26 +119,28 @@ public class MainActivity extends AppCompatActivity {
      */
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        boolean connected = mqtt.init();
 
-        // Once Mqtt service has been started, send registration request to this server.
-        String device = getDevice();
-        JSONObject json = new JSONObject();
-        try {
-            json.put("device", device);
+        if(mqtt.getConnected()){
+            mqtt.disconnect();
+        } else {
+            boolean connected = mqtt.init();
 
-            // Cast JSON object as Mqtt Message
-            MqttMessage message = new MqttMessage(json.toString().getBytes());
+            // Once Mqtt service has been started, send registration request to this server.
+            String device = getDevice();
+            JSONObject json = new JSONObject();
+            try {
+                json.put("device", device);
 
-            // Send message via MQTT and register device.
-            mqtt.registerDevice(message);
-        } catch(JSONException e){
-            Log.e("MainActivity", "Exception on creating JSON object to register device via MQTT.");
+                // Cast JSON object as Mqtt Message
+                MqttMessage message = new MqttMessage(json.toString().getBytes());
+
+                // Send message via MQTT and register device.
+                mqtt.registerDevice(message);
+            } catch(JSONException e){
+                Log.e("MainActivity", "Exception on creating JSON object to register device via MQTT.");
+            }
+            Toast.makeText(getApplicationContext(), connected + "", Toast.LENGTH_LONG);
         }
-
-
-
-        Toast.makeText(getApplicationContext(), connected + "", Toast.LENGTH_LONG);
 
         return super.onOptionsItemSelected(item);
     }
