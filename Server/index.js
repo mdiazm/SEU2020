@@ -190,16 +190,16 @@ app.get("/getDataOnDate", (req, res) => {
 
 // Create sockets to receive updates in real time.
 io.on('connection', (socket) =>{
-    console.log("Alguien se ha conectado con sockets");
+    console.log("Someone connected to this socket: " + socket.id);
 
     socket.on('subscribe', (room) =>{
+        console.log(socket.id + " subscribed to room of device: " + room);
         socket.join(room);
-        console.log("Alguien se ha suscrito a la sala: " + room);
     });
 
     socket.on("unsubscribe", (room) => {
+        console.log(socket.id + " subscribed to room of device: " + room);
         socket.leave(room);
-        console.log("Alguien ha borrado su suscripción.");
     })
 });
 
@@ -209,8 +209,7 @@ io.on('connection', (socket) =>{
  * @param {*} data data to put in the room, containing information about the sensors in realtime.
  */
 function distributeData(device, data){
-    console.log("This function is being called: " + data);
-
+    console.log("Data is being distributed in room: " + device);
     io.in(device).emit("message", data);
 }
 
