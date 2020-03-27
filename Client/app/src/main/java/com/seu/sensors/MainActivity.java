@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
         GuardarDatos();
 
         ///> Construir la comunicación MQTT
-        //mqtt = new MQTT("192.168.0.14");
+        //mqtt = new MQTT("192.168.0.16");
         mqtt = new MQTT("192.168.1.75");
         ///> Obtener la MAC del dispositivo
         getMacAddress();

@@ -28,6 +28,7 @@ public class MQTT implements MqttCallback {
      */
     public MQTT(String ip) {
         this.ip = ip;
+        connected = false;
         send_topic = "sensors/send/";
         this.register_topic = "sensors/register";
         try {
@@ -49,7 +50,7 @@ public class MQTT implements MqttCallback {
                 Log.d("MQTT", "conectando");
                 client.connect();
                 send_topic = "sensors/send/";
-                client.subscribe(send_topic);
+                //client.subscribe(send_topic);
                 connected = true;
                 return true;
             } catch (MqttException e) { ///> No ha sido posible conectar
