@@ -19,6 +19,7 @@ public class MQTT implements MqttCallback {
     private MqttClient client ; ///> Cliente MQTT
     private String send_topic; ///> Topic al que enviar
     private Boolean connected = false; ///> Estado de la conexión
+    private String register_topic; ///> Topic para registrarse
 
     /**
      * Constructor parametrizado
@@ -27,6 +28,7 @@ public class MQTT implements MqttCallback {
     public MQTT(String ip) {
         this.ip = ip;
         send_topic = "sensors/send/";
+        this.register_topic = "sensors/register";
         try {
             this.client = new MqttClient("tcp://" + ip + ":1883", "", new MemoryPersistence());
             client.setCallback( this);
@@ -173,5 +175,42 @@ public class MQTT implements MqttCallback {
      * */
     public Boolean getConnected() {
         return connected;
+    }
+
+    /**
+     * Método para registrar un dispositivo en MongoDB mediante MQTT.
+     * @param message identificador del dispositivo en formato mensaje de MQTT.
+     */
+    public void registerDevice(MqttMessage message){
+        if(connected) { ///> Está conectado --> Envío
+            try {
+                client.publish(register_topic, message);
+            } catch (MqttException e) {
+                ///> Se pierde la conexión
+                e.printStackTrace();
+                connected = false;
+                try {
+                    client.disconnect();
+                } catch (MqttException er) {
+                    er.printStackTrace();
+                }
+            }
+        }else { ///> No hay conexión --> Conecto y envío
+            try {
+                this.client = new MqttClient("tcp://" + ip + ":1883", "", new MemoryPersistence());
+                client.setCallback( this);
+                client.connect();
+                registerDevice(message);
+            } catch (MqttException e) {
+                ///> Se pierde la conexión
+                e.printStackTrace();
+                connected = false;
+                try {
+                    client.disconnect();
+                } catch (MqttException err) {
+                    err.printStackTrace();
+                }
+            }
+        }
     }
 }
