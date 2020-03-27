@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const app = express();
 const mqtt = require('./mqtt/mqtt');
 const database = require("./database/database");
+const server = require('http').Server(app);
 const session = require("express-session");
 
 // Configure sessions
@@ -136,9 +137,7 @@ app.post("/chooseDevice", (req, res) => {
 app.get("/chosenDevice", (req, res) => {
     // Get session variable
     var sess = req.session;
-
-    console.log(sess);
-
+    
     if(sess.deviceId){
         return res.send(sess.deviceId);
     } else {
@@ -189,6 +188,6 @@ app.get("/getDataOnDate", (req, res) => {
 })
 
 // Start server
-app.listen(3000, () => {
-    console.log("Server is ON");
+server.listen(3000, () => {
+    console.log("Server is running right now");
 })
