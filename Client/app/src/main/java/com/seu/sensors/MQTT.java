@@ -12,24 +12,27 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 /**
  * Clase para enviar datos mediante el protocolo MQTT
- * */
+ */
 public class MQTT implements MqttCallback {
 
     private String ip; ///> IP a la que conectar el cliente
-    private MqttClient client ; ///> Cliente MQTT
+    private MqttClient client; ///> Cliente MQTT
     private String send_topic; ///> Topic al que enviar
     private Boolean connected = false; ///> Estado de la conexión
+    private String register_topic; ///> Topic para registrarse
 
     /**
      * Constructor parametrizado
+     *
      * @param ip ip a la que enviar los datos
-     * */
+     */
     public MQTT(String ip) {
         this.ip = ip;
         send_topic = "sensors/send/";
+        this.register_topic = "sensors/register";
         try {
             this.client = new MqttClient("tcp://" + ip + ":1883", "", new MemoryPersistence());
-            client.setCallback( this);
+            client.setCallback(this);
 
         } catch (MqttException e) {
             e.printStackTrace();
@@ -39,9 +42,9 @@ public class MQTT implements MqttCallback {
 
     /**
      * Método para inicializar la conexión
-     * */
-    public boolean init(){
-        if(!connected) {
+     */
+    public boolean init() {
+        if (!connected) {
             try {
                 Log.d("MQTT", "conectando");
                 client.connect();
@@ -61,7 +64,7 @@ public class MQTT implements MqttCallback {
 
     /**
      * Método que indica conexión perdidda
-     * */
+     */
     @Override
     public void connectionLost(Throwable cause) {
         Log.d("MQTT", "connection lost");
@@ -75,7 +78,7 @@ public class MQTT implements MqttCallback {
 
     /**
      * Método que indica que ha llegado un mensaje
-     * */
+     */
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
         String payload = new String(message.getPayload());
@@ -84,7 +87,7 @@ public class MQTT implements MqttCallback {
 
     /**
      * Método que indica que se ha enviado un mensaje
-     * */
+     */
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
         Log.d("MQTT", "deliveryComplete");
@@ -92,11 +95,12 @@ public class MQTT implements MqttCallback {
 
     /**
      * Método para enviar un mensaje a un topic concreto
-     * @param message  mensaje a enviar
-     * @param sensor sensor del cual son los datos
-     * */
-    public void sendMessage(String sensor, MqttMessage message){
-        if(connected) { ///> Está conectado --> Envío
+     *
+     * @param message mensaje a enviar
+     * @param sensor  sensor del cual son los datos
+     */
+    public void sendMessage(String sensor, MqttMessage message) {
+        if (connected) { ///> Está conectado --> Envío
             try {
                 Log.d("MQTT", sensor);
                 client.publish(send_topic + sensor, message);
@@ -111,12 +115,12 @@ public class MQTT implements MqttCallback {
                     er.printStackTrace();
                 }
             }
-        }else { ///> No hay conexión --> Conecto y envío
+        } else { ///> No hay conexión --> Conecto y envío
             try {
                 this.client = new MqttClient("tcp://" + ip + ":1883", "", new MemoryPersistence());
-                client.setCallback( this);
+                client.setCallback(this);
                 client.connect();
-                sendMessage(sensor,message);
+                sendMessage(sensor, message);
             } catch (MqttException e) {
                 ///> Se pierde la conexión
                 e.printStackTrace();
@@ -131,8 +135,8 @@ public class MQTT implements MqttCallback {
         }
     }
 
-    public void sendMessageCollection(String sensor, MqttMessage message){
-        if(connected) { ///> Está conectado --> Envío
+    public void sendMessageCollection(String sensor, MqttMessage message) {
+        if (connected) { ///> Está conectado --> Envío
             try {
                 Log.d("MQTT", sensor);
                 client.publish("send/collection/" + sensor, message);
@@ -147,12 +151,12 @@ public class MQTT implements MqttCallback {
                     er.printStackTrace();
                 }
             }
-        }else { ///> No hay conexión --> Conecto y envío
+        } else { ///> No hay conexión --> Conecto y envío
             try {
                 this.client = new MqttClient("tcp://" + ip + ":1883", "", new MemoryPersistence());
-                client.setCallback( this);
+                client.setCallback(this);
                 client.connect();
-                sendMessageCollection(sensor,message);
+                sendMessageCollection(sensor, message);
             } catch (MqttException e) {
                 ///> Se pierde la conexión
                 e.printStackTrace();
@@ -169,13 +173,57 @@ public class MQTT implements MqttCallback {
 
     /**
      * Método para obtener el estado de conexión de MQTT
+     *
      * @return true si está conectado, false en otro caso
-     * */
+     */
     public Boolean getConnected() {
         return connected;
     }
 
-    public void disconnected(){
+
+    /**
+     * Método para registrar un dispositivo en MongoDB mediante MQTT.
+     *
+     * @param message identificador del dispositivo en formato mensaje de MQTT.
+     */
+    public void registerDevice(MqttMessage message) {
+        if (connected) { ///> Está conectado --> Envío
+            try {
+                client.publish(register_topic, message);
+            } catch (MqttException e) {
+                ///> Se pierde la conexión
+                e.printStackTrace();
+                connected = false;
+                try {
+                    client.disconnect();
+                } catch (MqttException er) {
+                    er.printStackTrace();
+                }
+            }
+        } else { ///> No hay conexión --> Conecto y envío
+            try {
+                this.client = new MqttClient("tcp://" + ip + ":1883", "", new MemoryPersistence());
+                client.setCallback(this);
+                client.connect();
+                registerDevice(message);
+            } catch (MqttException e) {
+                ///> Se pierde la conexión
+                e.printStackTrace();
+                connected = false;
+                try {
+                    client.disconnect();
+                } catch (MqttException err) {
+                    err.printStackTrace();
+                }
+            }
+        }
+    }
+
+    /**
+     * Método para desconectar del broker MQTT.
+     */
+    public void disconnect() {
+
         try {
             client.disconnect();
             connected = false;

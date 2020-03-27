@@ -3,13 +3,15 @@
  */
 
 const mqtt = require('mqtt');
-const database = require('./database')
+const database = require('../database/database')
 var client = mqtt.connect('tcp://localhost'); // MQTT Broker url (via TCP)
 
 // Possible actions
 const Actions = {
     SEND: 'send',
-    REQUEST: 'request'
+    REQUEST: 'request',
+    REGISTER: 'register', 
+    COLLECTION: 'collection'
 };
 
 // Sensors
@@ -34,9 +36,14 @@ client.on('message', (topic, message) => {
     if(elements.length == 3){
         if(action === Actions.SEND){
             // Code to store user data
-            parseReceivedMessage(sensor, message.toString());
+            parseReceivedRegister(sensor, message.toString());
         } else if(action === Actions.REQUEST){
             // Code to send requested information to Android Client
+        } else if(action === Actions.REGISTER) {
+            // Register device 
+            registerDevice(message);
+        } else if(action === Actions.COLLECTION) {
+            // Receive a collection of registers.
         }
     }
 });
@@ -47,8 +54,7 @@ client.on('message', (topic, message) => {
  * @param sensor which sent the information
  * @param data string formatted as json with the information from each sensor
  */
-
- function parseReceivedMessage(sensor, data){
+ function parseReceivedRegister(sensor, data){
 
     var json = JSON.parse(data);
 
@@ -56,7 +62,7 @@ client.on('message', (topic, message) => {
         case Sensors.ACCELEROMETER: 
             var values = new Models.Accelerometer({
                 device: json.device,
-                timestamp: new Date(json.timestamp),
+                timestamp: new Date(parseInt(json.timestamp)),
                 x: json.x,
                 y: json.y,
                 z: json.z
@@ -70,20 +76,19 @@ client.on('message', (topic, message) => {
         case Sensors.GYROSCOPE:
             var values = new Models.Gyroscope({
                 device: json.device,
-                timestamp: new Date(json.timestamp),
+                timestamp: new Date(parseInt(json.timestamp)),
                 x: json.x,
                 y: json.y,
                 z: json.z
             });
             // Insert data in the database
             InsertData(values);
-            console.log(values);
             break;
 
         case Sensors.GPS:
             var values = new Models.GPS({
                 device: json.device,
-                timestamp: new Date(json.timestamp),
+                timestamp: new Date(parseInt(json.timestamp)),
                 latitude: json.latitude,
                 longitude: json.longitude,
                 bearing: json.bearing,
@@ -99,7 +104,7 @@ client.on('message', (topic, message) => {
         case Sensors.LIGHT:
             var values = new Models.Light({
                 device: json.device,
-                timestamp: new Date(json.timestamp),
+                timestamp: new Date(parseInt(json.timestamp)),
                 lux: json.lux
             });
             // Insert data in the database
@@ -109,7 +114,7 @@ client.on('message', (topic, message) => {
         case Sensors.PROXIMITY:
             var values = new Models.Proximity({
                 device: json.device,
-                timestamp: new Date(json.timestamp),
+                timestamp: new Date(parseInt(json.timestamp)),
                 proximity: json.proximity
             });
             // Insert data in the database
@@ -119,7 +124,7 @@ client.on('message', (topic, message) => {
         case Sensors.BATTERY:
             var values = new Models.Battery({
                 device: json.device,
-                timestamp: new Date(json.timestamp),
+                timestamp: new Date(parseInt(json.timestamp)),
                 level: json.level,
                 scale: json.scale,
                 voltage: json.voltage,
@@ -139,7 +144,32 @@ client.on('message', (topic, message) => {
             InsertData(values);
             break;
 
+        case Sensors.STATUS:
+            var values = new Models.Status({
+                device: json.device,
+                value: json.value
+            });
+
+            // Insert data in the database
+            InsertData(values);
+            break;
+
         default:
             console.log("No existing behavior for this sensor: " + sensor);
     }
- }
+}
+
+/**
+ * Function to register a mobile phone within the system. This will be called when the mobile connects to MQTT broker.
+ * @param json message 
+ */
+function registerDevice(message){
+
+    var json = json.parse(message);
+
+    var values = new Models.Device({
+        device: json.device
+    });
+
+    InsertData(values);
+}
