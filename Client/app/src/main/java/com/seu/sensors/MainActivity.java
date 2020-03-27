@@ -4,6 +4,7 @@ import com.seu.sensors.Sensors.Sensor;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -67,6 +68,8 @@ public class MainActivity extends AppCompatActivity {
     private MQTT mqtt; ///> Mqtt: se usa para la comunicación con el servidor que almacenará los datos en la base de datos
     private String mac; ///> Dirección MAC del teléfono
 
+    private Menu menu;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +112,8 @@ public class MainActivity extends AppCompatActivity {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu, menu);
 
+        this.menu = menu;
+
         return true;
     }
 
@@ -120,10 +125,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
-        if(mqtt.getConnected()){
+        if (mqtt.getConnected()) {
             mqtt.disconnect();
+            menu.getItem(0).setIcon(ContextCompat.getDrawable(this, R.drawable.ic_import_export_black_24dp));
         } else {
             boolean connected = mqtt.init();
+            menu.getItem(0).setIcon(ContextCompat.getDrawable(this, R.drawable.green_icon));
 
             // Once Mqtt service has been started, send registration request to this server.
             String device = getDevice();
@@ -136,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // Send message via MQTT and register device.
                 mqtt.registerDevice(message);
-            } catch(JSONException e){
+            } catch (JSONException e) {
                 Log.e("MainActivity", "Exception on creating JSON object to register device via MQTT.");
             }
             Toast.makeText(getApplicationContext(), connected + "", Toast.LENGTH_LONG);
