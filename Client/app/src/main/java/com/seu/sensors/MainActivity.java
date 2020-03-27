@@ -116,9 +116,13 @@ public class MainActivity extends AppCompatActivity {
      * */
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        boolean connected = mqtt.init();
 
-        Toast.makeText(getApplicationContext(), connected + "", Toast.LENGTH_LONG );
+        if(mqtt.getConnected()){
+            mqtt.disconnected();
+        }else {
+
+            mqtt.init();
+        }
 
         return super.onOptionsItemSelected(item);
     }

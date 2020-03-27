@@ -174,4 +174,13 @@ public class MQTT implements MqttCallback {
     public Boolean getConnected() {
         return connected;
     }
+
+    public void disconnected(){
+        try {
+            client.disconnect();
+            connected = false;
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
 }
