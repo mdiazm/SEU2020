@@ -46,7 +46,6 @@ public class Barometer extends Sensor {
         this.x = x;
     }
 
-
     public String getTimestamp() {
         return timestamp;
     }
@@ -55,13 +54,6 @@ public class Barometer extends Sensor {
         this.timestamp = timestamp;
     }
 
-    public void setAttributes(float x, float y, float z, String timestamp){
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.timestamp = timestamp;
-
-    }
 
     public float getValue() {
         return x;

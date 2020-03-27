@@ -1,6 +1,7 @@
 package com.seu.sensors;
-
 import com.seu.sensors.Sensors.Sensor;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -13,6 +14,11 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.aware.Accelerometer;
 import com.aware.Applications;
@@ -33,31 +39,39 @@ import com.aware.providers.Light_Provider;
 import com.aware.providers.Locations_Provider;
 import com.aware.providers.Proximity_Provider;
 import com.aware.providers.Temperature_Provider;
-
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.lang.Math;
-import java.util.Date;
 import java.util.UUID;
 
+/**
+ * Clase principal para el control de la aplicación
+ * */
 public class MainActivity extends AppCompatActivity {
-    private RecyclerView mRecyclerView;
-    private MyAdapter mAdapter;
-    ArrayList<Object> arrayList = new ArrayList<>();
 
-    private MQTT mqtt;
-    private String mac;
+    private MyAdapter mAdapter; ///> Adaptador para mostrar los distintos sensores
+    ArrayList<Object> arrayList = new ArrayList<>(); ///> Array de sensores
+
+    private MQTT mqtt; ///> Mqtt: se usa para la comunicación con el servidor que almacenará los datos en la base de datos
+    private String mac; ///> Dirección MAC del teléfono
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //Volvemos al tema por defecto de la app
-        setTheme(R.style.AppTheme);
+        setTheme(R.style.AppTheme); ///> Volvemos al tema por defecto de la app para ocultar el splash
         setContentView(R.layout.activity_main);
+
 
 
         // Aware framework
@@ -70,20 +84,48 @@ public class MainActivity extends AppCompatActivity {
         ///> Añadir los datos de los sensores
         AddSensorsItems();
 
-
         ///> Inicializar los observadores de los sensores
         InitListener();
 
         ///> Guardar los datos de los sensores
         GuardarDatos();
 
-        //mqtt = new MQTT("10.82.197.241");
-        mqtt = new MQTT("192.168.1.75");
-        mqtt.init();
-
+        ///> Construir la comunicación MQTT
+        //mqtt = new MQTT("192.168.0.14");
+        mqtt = new MQTT("178.62.241.158");
+        ///> Obtener la MAC del dispositivo
         getMacAddress();
     }
 
+    /**
+     * Método para añadir el botón en la Toolbar
+     * @param menu Botón para conectar con mqtt
+     * */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+
+        return true;
+
+    }
+
+    /**
+     * Método para añadir funcionalidad al botón de la Toolbar
+     * @param item botón que se ha presionado
+     * */
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        boolean connected = mqtt.init();
+
+        Toast.makeText(getApplicationContext(), connected + "", Toast.LENGTH_LONG );
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Método para obtener la MAC del teléfono
+     * */
     public void getMacAddress(){
         WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         WifiInfo wInfo = wifiManager.getConnectionInfo();
@@ -94,13 +136,122 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Método para obtener la MAC del teléfono
+     * @return String MAC
+     * */
     public String getDevice(){
         return mac;
     }
 
+
+    /**
+     * Método para almacenar los datos de un sensor determinado en un fichero
+     * @param filename nombre del fichero
+     * @param data datos a almacenar
+     * */
+    public void saveData(String filename, JSONObject data){
+
+        File temp;
+        try
+        {
+            temp = File.createTempFile(filename, ".json");
+
+            boolean exists = temp.exists();
+
+            if(!exists){
+                new File(getApplicationContext().getFilesDir(), filename + ".json");
+            }
+
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(getApplicationContext().openFileOutput(filename + ".json", Context.MODE_APPEND));
+            outputStreamWriter.write(data.toString());
+            outputStreamWriter.close();
+
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Método para leer los datos de un fichero
+     * @param filename fichero a leer
+     * */
+    public  void readData(String filename){
+        try {
+            InputStream inputStream = getApplicationContext().openFileInput(filename);
+
+            if ( inputStream != null ) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ( (receiveString = bufferedReader.readLine()) != null ) {
+                    stringBuilder.append("\n").append(receiveString);
+                }
+
+                inputStream.close();
+
+            }
+        }
+        catch (FileNotFoundException e) {
+            Log.e("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.e("login activity", "Can not read file: " + e.toString());
+        }
+    }
+
+    /**
+     * Método para enviar los datos de un fichero por mqtt
+     * @param filename fichero a enviar
+     * */
+    public void sendSaveData(String filename){
+        try {
+            InputStream inputStream = getApplicationContext().openFileInput(filename + ".json");
+
+            if ( inputStream != null ) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ( (receiveString = bufferedReader.readLine()) != null ) {
+                    stringBuilder.append("\n").append(receiveString);
+                }
+
+                inputStream.close();
+
+                mqtt.sendMessageCollection(filename, new MqttMessage(stringBuilder.toString().getBytes()));
+
+                ///> Eliminación del fichero para que no se vuelva a mandar más lo mismo
+                File file = new File(getFilesDir(), filename + ".json");
+                file.delete();
+
+                File temp = File.createTempFile(filename, ".json");
+                temp.exists();
+                temp.delete();
+
+            }
+        }
+        catch (FileNotFoundException e) {
+            Log.e("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.e("login activity", "Can not read file: " + e.toString());
+        }
+    }
+
+    /**
+     * Método para inicializar los listener de los sensores
+     * */
     public void InitListener(){
 
+        ///> Giroscopio
         Gyroscope.setSensorObserver(new Gyroscope.AWARESensorObserver() {
+
+            /**
+             * Método para detectar un cambio en el giroscopio
+             * */
             @Override
             public void onGyroscopeChanged(ContentValues data) {
                 String x = data.get(Gyroscope_Provider.Gyroscope_Data.VALUES_0).toString();
@@ -134,8 +285,13 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("y", y);
                                 json.put("z", z);
 
-                                mqtt.sendMessage("gyroscope", new MqttMessage(json.toString().getBytes()));
-
+                                if(mqtt.getConnected()) { ///> Hay conexión
+                                    sendSaveData("gyroscope");
+                                    mqtt.sendMessage("gyroscope", new MqttMessage(json.toString().getBytes()));
+                                }
+                                else{ ///> No hay conexión
+                                    saveData("gyroscope", json);
+                                }
                             }catch (Exception e){
                                 e.printStackTrace();
                             }
@@ -145,7 +301,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ///> Acelerómetro
         Accelerometer.setSensorObserver(new Accelerometer.AWARESensorObserver() {
+            /**
+             * Método para detectar un cambio en el acelerómetro
+             * */
             @Override
             public void onAccelerometerChanged(ContentValues data) {
                 String x = data.get(Accelerometer_Provider.Accelerometer_Data.VALUES_0).toString();
@@ -178,8 +338,13 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("y", y);
                                 json.put("z", z);
 
-                                mqtt.sendMessage("accelerometer", new MqttMessage(json.toString().getBytes()));
-
+                                if(mqtt.getConnected()){ ///> Hay conexión
+                                    sendSaveData("accelerometer");
+                                    mqtt.sendMessage("accelerometer", new MqttMessage(json.toString().getBytes()));
+                                }
+                                else{ ///> No hay conexión
+                                    saveData("accelerometer", json);
+                                }
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -189,7 +354,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ///> Localización
         Locations.setSensorObserver(new Locations.AWARESensorObserver() {
+            /**
+             * Método para detectar un cambio en la localización
+             * */
             @Override
             public void onLocationChanged(ContentValues data) {
                 String device = getDevice();
@@ -225,7 +394,13 @@ public class MainActivity extends AppCompatActivity {
                             json.put("altitude", altitude);
                             json.put("accuracy", accuracy);
 
-                            mqtt.sendMessage("gps", new MqttMessage(json.toString().getBytes()));
+                            if(mqtt.getConnected()){ ///> Hay conexión
+                                sendSaveData("gps");
+                                mqtt.sendMessage("gps", new MqttMessage(json.toString().getBytes()));
+                            }
+                            else{ ///> No hay conexión
+                                saveData("gps", json);
+                            }
                         }catch (Exception e){
                             e.printStackTrace();
                         }
@@ -234,7 +409,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ///> Luminosidad
         Light.setSensorObserver(new Light.AWARESensorObserver() {
+            /**
+             * Método para detectar un cambio en la luminosidad
+             * */
             @Override
             public void onLightChanged(ContentValues data) {
                 String lux = data.get(Light_Provider.Light_Data.LIGHT_LUX).toString();
@@ -257,8 +436,14 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("timestamp", timestamp);
                                 json.put("lux", lux);
 
-                                mqtt.sendMessage("light", new MqttMessage(json.toString().getBytes()));
+                                if(mqtt.getConnected()){ ///> Hay conexión
+                                    sendSaveData("light");
 
+                                    mqtt.sendMessage("light", new MqttMessage(json.toString().getBytes()));
+                                }
+                                else{ ///> No hay conexión
+                                    saveData("light", json);
+                                }
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -269,7 +454,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ///> Proximidad
         Proximity.setSensorObserver(new Proximity.AWARESensorObserver() {
+            /**
+             * Método para detectar un cambio en la proximidad
+             * */
             @Override
             public void onProximityChanged(ContentValues data) {
                 String device = getDevice();
@@ -291,8 +480,13 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("timestamp", timestamp);
                                 json.put("proximity", proximity);
 
-                                mqtt.sendMessage("proximity", new MqttMessage(json.toString().getBytes()));
-
+                                if(mqtt.getConnected()){ ///> Hay conexión
+                                    sendSaveData("proximity");
+                                    mqtt.sendMessage("proximity", new MqttMessage(json.toString().getBytes()));
+                                }
+                                else{ ///> No hay conexión
+                                    saveData("proximity", json);
+                                }
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -302,7 +496,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ///> Nivel de batería
         Battery.setSensorObserver(new Battery.AWARESensorObserver() {
+            /**
+             * Método para detectar un cambio en el nivel de batería
+             * */
             @Override
             public void onBatteryChanged(ContentValues data) {
                 String device = getDevice();
@@ -333,8 +531,13 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("voltage", voltage);
                                 json.put("temperature", temperature);
 
-                                mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
-
+                                if(mqtt.getConnected()){ ///> Hay conexión
+                                    sendSaveData("battery");
+                                    mqtt.sendMessage("battery", new MqttMessage(json.toString().getBytes()));
+                                }
+                                else{ ///> No hay conexión
+                                    saveData("battery", json);
+                                }
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -343,6 +546,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
+            /**
+             * Método para detectar el reboot del teléfono
+             * */
             @Override
             public void onPhoneReboot() {
                 try {
@@ -350,13 +556,21 @@ public class MainActivity extends AppCompatActivity {
                     json.put("device", getDevice());
                     json.put("value", "reboot");
 
-                    mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
-
+                    if(mqtt.getConnected()){ ///> Hay conexión
+                        sendSaveData("status");
+                        mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
+                    }
+                    else{ ///> No hay conexión
+                        saveData("status", json);
+                    }
                 }catch (Exception e){
                     e.printStackTrace();
                 }
             }
 
+            /**
+             * Método para detectar el apagado del teléfono
+             * */
             @Override
             public void onPhoneShutdown() {
                 try {
@@ -364,13 +578,21 @@ public class MainActivity extends AppCompatActivity {
                     json.put("device", getDevice());
                     json.put("value", "shutdown");
 
-                    mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
-
+                    if(mqtt.getConnected()){ ///> Hay conexión
+                        sendSaveData("status");
+                        mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
+                    }
+                    else{ ///> No hay conexión
+                        saveData("status", json);
+                    }
                 }catch (Exception e){
                     e.printStackTrace();
                 }
             }
 
+            /**
+             * Método para detectar batería baja
+             * */
             @Override
             public void onBatteryLow() {
                 try {
@@ -378,13 +600,22 @@ public class MainActivity extends AppCompatActivity {
                     json.put("device", getDevice());
                     json.put("value", "battery_low");
 
-                    mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
+                    if(mqtt.getConnected()){ ///> Hay conexión
+                        sendSaveData("status");
+                        mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
+                    }
+                    else{ ///> No hay conexión
+                        saveData("status", json);
+                    }
 
                 }catch (Exception e){
                     e.printStackTrace();
                 }
             }
 
+            /**
+             * Método para detectar que se está cargando el teléfono
+             * */
             @Override
             public void onBatteryCharging() {
                 try {
@@ -392,13 +623,21 @@ public class MainActivity extends AppCompatActivity {
                     json.put("device", getDevice());
                     json.put("value", "charging");
 
-                    mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
-
+                    if(mqtt.getConnected()){ ///> Hay conexión
+                        sendSaveData("status");
+                        mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
+                    }
+                    else{ ///> No hay conexión
+                        saveData("status", json);
+                    }
                 }catch (Exception e){
                     e.printStackTrace();
                 }
             }
 
+            /**
+             * Método para detectar que se está descargando el teléfono
+             * */
             @Override
             public void onBatteryDischarging() {
                 try {
@@ -406,15 +645,24 @@ public class MainActivity extends AppCompatActivity {
                     json.put("device", getDevice());
                     json.put("value", "discharging");
 
-                    mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
-
+                    if(mqtt.getConnected()){ //> Hay conexión
+                        sendSaveData("status");
+                        mqtt.sendMessage("status", new MqttMessage(json.toString().getBytes()));
+                    }
+                    else{ ///> Noo hay conexión
+                        saveData("status", json);
+                    }
                 }catch (Exception e){
                     e.printStackTrace();
                 }
             }
         });
 
+        ///> Barómetro
         Barometer.setSensorObserver(new Barometer.AWARESensorObserver() {
+            /**
+             * Método para detectar un cambio en el barómetro
+             * */
             @Override
             public void onBarometerChanged(ContentValues data) {
                 String device = getDevice();
@@ -436,8 +684,13 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("timestamp", timestamp);
                                 json.put("value", value);
 
-                                mqtt.sendMessage("barometer", new MqttMessage(json.toString().getBytes()));
-
+                                if(mqtt.getConnected()){ ///> Hay conexión
+                                    sendSaveData("barometer");
+                                    mqtt.sendMessage("barometer", new MqttMessage(json.toString().getBytes()));
+                                }
+                                else{ ///> No hay conexión
+                                    saveData("barometer", json);
+                                }
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -447,7 +700,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ///> Temperatura
         Temperature.setSensorObserver(new Temperature.AWARESensorObserver() {
+            /**
+             * Método para detectar un cambio en la temperatura
+             * */
             @Override
             public void onTemperatureChanged(ContentValues data) {
                 String timestamp = data.getAsString(Temperature_Provider.Temperature_Data.TIMESTAMP);
@@ -468,21 +725,26 @@ public class MainActivity extends AppCompatActivity {
                                 json.put("timestamp", timestamp);
                                 json.put("value", value);
 
-                                mqtt.sendMessage("temperature", new MqttMessage(json.toString().getBytes()));
-
+                                if(mqtt.getConnected()){ ///> Hay conexión
+                                    sendSaveData("temperature");
+                                    mqtt.sendMessage("temperature", new MqttMessage(json.toString().getBytes()));
+                                }
+                                else{ ///> No hay conexión
+                                    saveData("temperature", json);
+                                }
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
                         }
                     }
                 }
-
             }
         });
-
     }
 
-
+    /**
+     * Método para añadir los sensores que vamos a monitorizar
+     * */
     public void AddSensorsItems(){
         SharedPreferences myPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         boolean save = myPreferences.getBoolean("save_sensor", false);
@@ -507,8 +769,6 @@ public class MainActivity extends AppCompatActivity {
 
             arrayList.add(new com.seu.sensors.Sensors.Locations("GPS", false, R.drawable.ic_action_locations, "gps", this));
 
-            arrayList.add(new Sensor("Micrófono", false, R.drawable.ic_action_ambient_noise, "microfono", this));
-
             arrayList.add(new com.seu.sensors.Sensors.Light("Luminosidad", true, R.drawable.ic_action_light, "luminosidad", this));
             ///> Luminosidad
             Aware.setSetting(this, Aware_Preferences.FREQUENCY_LIGHT, 200000);
@@ -523,10 +783,10 @@ public class MainActivity extends AppCompatActivity {
             Aware.startTemperature(this);
             arrayList.add(new com.seu.sensors.Sensors.Temperature("Temperatura", true, R.drawable.ic_action_temperature, "temperatura", this));
 
-            arrayList.add(new Sensor("Uso de apps", false, R.drawable.ic_action_applications, "uso_apps", this));
+            ///> Batería
             arrayList.add(new com.seu.sensors.Sensors.Battery("Batería", false, R.drawable.ic_action_battery, "bateria", this));
+            ///> Barómetro
             arrayList.add(new com.seu.sensors.Sensors.Barometer("Barómetro", false, R.drawable.ic_action_barometer, "barometro", this));
-           // arrayList.add(new Sensor("MQTT", false, R.drawable.ic_action_communication, "mqtt" ,this));
 
         }else{ ///> Inicializar los datos con los valores almacenados
 
@@ -558,11 +818,6 @@ public class MainActivity extends AppCompatActivity {
                 Aware.startLocations(this);
             }
 
-            item = myPreferences.getBoolean("microfono", false);
-            arrayList.add(new Sensor("Micrófono", item, R.drawable.ic_action_ambient_noise, "microfono", this));
-            if(item) {
-            }
-
             item = myPreferences.getBoolean("luminosidad", false);
             arrayList.add(new com.seu.sensors.Sensors.Light("Luminosidad", item, R.drawable.ic_action_light, "luminosidad", this));
             if(item) {
@@ -589,13 +844,6 @@ public class MainActivity extends AppCompatActivity {
                 Aware.startTemperature(this);
             }
 
-            item = myPreferences.getBoolean("uso_apps", false);
-            arrayList.add(new Sensor("Uso de apps", item, R.drawable.ic_action_applications, "uso_apps", this));
-            if(item){
-                Aware.setSetting(this, Aware_Preferences.FREQUENCY_APPLICATIONS, 200000);
-             //   Aware.startApplications(this);
-            }
-
             item = myPreferences.getBoolean("bateria", false);
             arrayList.add(new com.seu.sensors.Sensors.Battery("Batería", item, R.drawable.ic_action_battery, "bateria" ,this));
             if(item){
@@ -610,9 +858,6 @@ public class MainActivity extends AppCompatActivity {
             }
             arrayList.add(new com.seu.sensors.Sensors.Barometer("Barómetro", item, R.drawable.ic_action_barometer, "barometro", this));
 
-            //item = myPreferences.getBoolean("mqtt", false);
-            //arrayList.add(new Sensor("MQTT", item, R.drawable.ic_action_communication, "mqtt", this));
-
         }
 
         ///> Agregar el adapter al recycler view
@@ -625,24 +870,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     *
-     *
+     * Método para guardar los datos relacionados con los sensores activos e inicativos del teléfono
      **/
     public void GuardarDatos(){
         SharedPreferences myPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         SharedPreferences.Editor editor = myPreferences.edit();
-        editor.putBoolean(((Sensor)arrayList.get(0)).getKey(), ((Sensor)arrayList.get(0)).getState());
+        editor.putBoolean(((Sensor)arrayList.get(0)).getKey(), ((Sensor) arrayList.get(0)).getState());
         editor.putBoolean(((Sensor)arrayList.get(1)).getKey(),((Sensor) arrayList.get(1)).getState());
         editor.putBoolean(((Sensor)arrayList.get(2)).getKey(),((Sensor) arrayList.get(2)).getState());
         editor.putBoolean(((Sensor)arrayList.get(3)).getKey(),((Sensor) arrayList.get(3)).getState());
         editor.putBoolean(((Sensor)arrayList.get(4)).getKey(),((Sensor) arrayList.get(4)).getState());
         editor.putBoolean(((Sensor)arrayList.get(5)).getKey(),((Sensor) arrayList.get(5)).getState());
         editor.putBoolean(((Sensor)arrayList.get(6)).getKey(),((Sensor) arrayList.get(6)).getState());
-        editor.putBoolean(((Sensor)arrayList.get(7)).getKey(), ((Sensor)arrayList.get(7)).getState());
-        editor.putBoolean(((Sensor)arrayList.get(8)).getKey(),((Sensor) arrayList.get(8)).getState());
-        editor.putBoolean(((Sensor)arrayList.get(9)).getKey(), ((Sensor)arrayList.get(9)).getState());
-       // editor.putBoolean(arrayList.get(10).getKey(), arrayList.get(10).getState());
-
+        editor.putBoolean(((Sensor)arrayList.get(7)).getKey(), ((Sensor) arrayList.get(7)).getState());
         editor.putBoolean("save_sensor", true);
 
         editor.commit();

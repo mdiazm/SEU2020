@@ -2,16 +2,25 @@ package com.seu.sensors.Sensors;
 
 import android.content.Context;
 
-import java.util.Date;
-
+/**
+ * Clase para manejar los datos del acelerómetro
+ * */
 public class Accelerometer extends Sensor {
 
-    private float x;
-    private  float y;
-    private  float z;
-    private String timestamp;
-    private float offset;
+    private float x; ///> Dirección x del acelerómetro
+    private  float y; ///> Dirección y del acelerómetro
+    private  float z; ///> Dirección z del acelerómetro
+    private String timestamp; ///> última modificación
+    private float offset; ///> Intervalo de modificación para notificar del cambio
 
+    /**
+     * Constructor parametrizado
+     * @param name
+     * @param image
+     * @param state
+     * @param key
+     * @param c
+     * */
     public Accelerometer(String name, boolean state, int image, String key, Context c){
         super(name, state, image, key, c);
         offset = 2.0f;
