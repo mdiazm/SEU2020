@@ -58,7 +58,11 @@ app.get("/getAvailableSensors", function(req, res){
     if(sess.deviceId){
         if(database.databaseReady){
             var sensorNames = database.getSensorsIdentifiers(sess.deviceId);
-            return res.json(sensorNames);
+
+            sensorNames.then((result) => {
+                return res.json(result);
+            });
+
         } else {
             var result = "Database is starting";
             return res.send(result);
@@ -170,17 +174,13 @@ app.get("/getDataOnDate", (req, res) => {
         if(endDate == null){
             // endDate was not defined
             var data = database.getDataInDay(device, sensorName, startDate).then((result) =>{
-                return result;
+                return res.json(result);
             })
-
-            return res.json(data);
         } else {
             // endDate was defined so we should call a different method.
             var data = database.getDataInInterval(device, sensorName, startDate, endDate).then((result) =>{
-                return result;
+                return res.json(result);
             })
-
-            return res.json(data);
         }
 
     } else {
