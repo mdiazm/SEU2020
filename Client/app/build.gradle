@@ -43,4 +43,8 @@ dependencies {
         exclude module: 'appcompat-v7'
         exclude module: 'support-v4'
     }
+
+    //Location
+    implementation 'com.google.android.gms:play-services-location:17.0.0'
+
 }

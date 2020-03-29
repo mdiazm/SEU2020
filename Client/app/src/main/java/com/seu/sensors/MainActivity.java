@@ -1,20 +1,36 @@
 package com.seu.sensors;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.seu.sensors.Sensors.Locations;
 import com.seu.sensors.Sensors.Sensor;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Service;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
@@ -30,7 +46,6 @@ import com.aware.Barometer;
 import com.aware.Battery;
 import com.aware.Gyroscope;
 import com.aware.Light;
-import com.aware.Locations;
 import com.aware.Proximity;
 import com.aware.Temperature;
 import com.aware.providers.Accelerometer_Provider;
@@ -55,12 +70,15 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.lang.Math;
+import java.util.Date;
 import java.util.UUID;
+
+
 
 /**
  * Clase principal para el control de la aplicación
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LocationListener {
 
     private MyAdapter mAdapter; ///> Adaptador para mostrar los distintos sensores
     ArrayList<Object> arrayList = new ArrayList<>(); ///> Array de sensores
@@ -69,6 +87,14 @@ public class MainActivity extends AppCompatActivity {
     private String mac; ///> Dirección MAC del teléfono
 
     private Menu menu;
+    private FusedLocationProviderClient fusedLocationClient;
+    private LocationRequest _locationRequest; ///< Configuration of how the location will be requested.
+    private LocationCallback _locationCallback; ///< What to do when location is received
+    private static final int LOCATION_REFRESH_TIME = 5000; ///< Minimum time interval between changes
+    private static final int LOCATION_REFRESH_DISTANCE = 5; ///< Minimum distance interval between changes
+    private static final int UPDATES_MILLISECONDS = 10000;
+    private static final int FASTEST_INTERVAL = 8000;
+    private LocationManager _locationManager;
 
 
     @Override
@@ -78,6 +104,8 @@ public class MainActivity extends AppCompatActivity {
         setTheme(R.style.AppTheme); ///> Volvemos al tema por defecto de la app para ocultar el splash
         setContentView(R.layout.activity_main);
 
+        checkPermissionLocation();
+        checkPermissionFinesLocation();
         // Aware framework
         Intent aware = new Intent(this, Aware.class);
         startService(aware);
@@ -85,20 +113,27 @@ public class MainActivity extends AppCompatActivity {
         Aware.setSetting(this, Aware_Preferences.STATUS_APPLICATIONS, true);
         Applications.isAccessibilityServiceActive(getApplicationContext());
 
+
+        _locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
         ///> Añadir los datos de los sensores
         AddSensorsItems();
 
         ///> Inicializar los observadores de los sensores
         InitListener();
 
+
+
         ///> Guardar los datos de los sensores
         GuardarDatos();
 
         ///> Construir la comunicación MQTT
-        //mqtt = new MQTT("192.168.0.16");
-        mqtt = new MQTT("192.168.1.75");
+        mqtt = new MQTT("192.168.0.16");
+        //mqtt = new MQTT("192.168.1.75");
         ///> Obtener la MAC del dispositivo
         getMacAddress();
+
     }
 
     /**
@@ -380,10 +415,149 @@ public class MainActivity extends AppCompatActivity {
         });
 
         ///> Localización
-        Locations.setSensorObserver(new Locations.AWARESensorObserver() {
-            /**
-             * Método para detectar un cambio en la localización
-             * */
+        _locationCallback = new LocationCallback(){
+            @Override
+            public void onLocationResult(LocationResult locationResult){
+                super.onLocationResult(locationResult);
+                if(locationResult == null){
+                    return;
+                }
+
+                for(Location location: locationResult.getLocations()){
+                    String device = getDevice();
+                    String timestamp = new Date(location.getTime()).toString();
+                    String latitude = location.getLatitude() + "";
+                    String longitude = location.getLongitude() + "";
+                    String bearing = location.getBearing() + "";
+                    String speed = location.getSpeed() + "";
+                    String altitude = location.getAltitude() + "";
+                    String provider = location.getProvider() + "";
+                    String accuracy = location.getAccuracy() + "";
+
+                    try {
+                        JSONObject json = new JSONObject();
+                        json.put("device", device);
+                        json.put("timestamp", timestamp);
+                        json.put("latitude", latitude);
+                        json.put("longitude", longitude);
+                        json.put("bearing", bearing);
+                        json.put("speed", speed);
+                        json.put("provider", provider);
+                        json.put("altitude", altitude);
+                        json.put("accuracy", accuracy);
+
+                        if (mqtt.getConnected()) { ///> Hay conexión
+                            sendSaveData("gps");
+                            mqtt.sendMessage("gps", new MqttMessage(json.toString().getBytes()));
+                        } else { ///> No hay conexión
+                            saveData("gps", json);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(new OnSuccessListener<Location>() {
+                    // Get last known location
+                    @Override
+                    public void onSuccess(Location location) {
+                        if (location != null) {
+                            String device = getDevice();
+                            String timestamp = "";//new Date(location.getTime()).toString();
+                            String latitude = location.getLatitude() + "";
+                            String longitude = location.getLongitude() + "";
+                            String bearing = location.getBearing() + "";
+                            String speed = location.getSpeed() + "";
+                            String altitude = location.getAltitude() + "";
+                            String provider = location.getProvider() + "";
+                            String accuracy = location.getAccuracy() + "";
+
+                            try {
+                                JSONObject json = new JSONObject();
+                                json.put("device", device);
+                                json.put("timestamp", timestamp);
+                                json.put("latitude", latitude);
+                                json.put("longitude", longitude);
+                                json.put("bearing", bearing);
+                                json.put("speed", speed);
+                                json.put("provider", provider);
+                                json.put("altitude", altitude);
+                                json.put("accuracy", accuracy);
+
+                                if (mqtt.getConnected()) { ///> Hay conexión
+                                    sendSaveData("gps");
+                                    mqtt.sendMessage("gps", new MqttMessage(json.toString().getBytes()));
+                                } else { ///> No hay conexión
+                                    saveData("gps", json);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                });
+
+        fusedLocationClient.requestLocationUpdates(_locationRequest, _locationCallback,null);
+
+       /* fusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                // Got last known location. In some rare situations this can be null.
+                if (location != null) {
+                    String device = getDevice();
+                    String timestamp = new Date(location.getTime()).toString();
+                    String latitude = location.getLatitude() + "";
+                    String longitude = location.getLongitude() + "";
+                    String bearing = location.getBearing() + "";
+                    String speed = location.getSpeed() + "";
+                    String altitude = location.getAltitude() + "";
+                    String provider = location.getProvider() + "";
+                    String accuracy = location.getAccuracy() + "";
+
+                    for (int i = 0; i < arrayList.size(); i++) {
+                        if (arrayList.get(i) instanceof com.seu.sensors.Sensors.Locations) {
+                            com.seu.sensors.Sensors.Locations g = (com.seu.sensors.Sensors.Locations) arrayList.get(i);
+
+                            g.setTimestamp((timestamp));
+                            g.setAccuracy(Float.parseFloat(accuracy));
+                            g.setAltitude(Float.parseFloat(altitude));
+                            g.setBearing(Float.parseFloat(bearing));
+                            g.setLatitude(Float.parseFloat(latitude));
+                            g.setLongitude(Float.parseFloat(longitude));
+
+                            try {
+                                JSONObject json = new JSONObject();
+                                json.put("device", device);
+                                json.put("timestamp", timestamp);
+                                json.put("latitude", latitude);
+                                json.put("longitude", longitude);
+                                json.put("bearing", bearing);
+                                json.put("speed", speed);
+                                json.put("provider", provider);
+                                json.put("altitude", altitude);
+                                json.put("accuracy", accuracy);
+
+                                if (mqtt.getConnected()) { ///> Hay conexión
+                                    sendSaveData("gps");
+                                    mqtt.sendMessage("gps", new MqttMessage(json.toString().getBytes()));
+                                } else { ///> No hay conexión
+                                    saveData("gps", json);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
+        });*/
+        /**
+         * Método para detectar un cambio en la localización
+         * */
+        /*Locations.setSensorObserver(new Locations.AWARESensorObserver() {
             @Override
             public void onLocationChanged(ContentValues data) {
                 String device = getDevice();
@@ -431,7 +605,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
-        });
+        });*/
 
         ///> Luminosidad
         Light.setSensorObserver(new Light.AWARESensorObserver() {
@@ -781,7 +955,7 @@ public class MainActivity extends AppCompatActivity {
             Aware.setSetting(this, Aware_Preferences.THRESHOLD_ACCELEROMETER, 0.02f);
             Aware.startAccelerometer(this);
 
-            arrayList.add(new com.seu.sensors.Sensors.Locations("GPS", false, R.drawable.ic_action_locations, "gps", this));
+            arrayList.add(new com.seu.sensors.Sensors.Locations("GPS", false, R.drawable.ic_action_locations, "gps", this, _locationManager));
 
             arrayList.add(new com.seu.sensors.Sensors.Light("Luminosidad", true, R.drawable.ic_action_light, "luminosidad", this));
             ///> Luminosidad
@@ -825,11 +999,15 @@ public class MainActivity extends AppCompatActivity {
             }
 
             item = myPreferences.getBoolean("gps", false);
-            arrayList.add(new com.seu.sensors.Sensors.Locations("GPS", item, R.drawable.ic_action_locations, "gps", this));
+
+            arrayList.add(new com.seu.sensors.Sensors.Locations("GPS", item, R.drawable.ic_action_locations, "gps", this, _locationManager));
             if (item) {
-                Aware.setSetting(this, Aware_Preferences.FREQUENCY_LOCATION_GPS, 180); // CADA 3 MINUTOS
-                Aware.setSetting(this, Aware_Preferences.MIN_LOCATION_GPS_ACCURACY, 5); //CADA 500 METROSS
-                Aware.startLocations(this);
+                // To get location updates in background
+                _locationRequest = new LocationRequest();
+                _locationRequest.setInterval(UPDATES_MILLISECONDS);
+                _locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+                _locationRequest.setFastestInterval(FASTEST_INTERVAL);
+                _locationRequest.setSmallestDisplacement(LOCATION_REFRESH_DISTANCE);
             }
 
             item = myPreferences.getBoolean("luminosidad", false);
@@ -908,6 +1086,156 @@ public class MainActivity extends AppCompatActivity {
 
         ///> Guardar los datos de los sensores antes de pasar a segundo plano
         GuardarDatos();
+
     }
 
+    public boolean checkPermissionLocation(){
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                fusedLocationClient.getLastLocation();
+
+            } else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                        99);
+            }
+            return  false;
+        } else {
+            return true;
+        }
+    }
+    public boolean checkPermissionFinesLocation(){
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+                fusedLocationClient.getLastLocation();
+
+            } else {
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        101);
+            }
+            return  false;
+        } else {
+            return true;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case 99: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+                    fusedLocationClient.getLastLocation();
+                } else {
+                    for (int i = 0; i < arrayList.size(); i++) {
+                        if (arrayList.get(i) instanceof com.seu.sensors.Sensors.Locations) {
+                            ((Locations) arrayList.get(i)).setState(false);
+                        }
+                        return;
+                    }
+                }
+            }
+            case 101: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+                    fusedLocationClient.getLastLocation();
+                } else {
+                    for (int i = 0; i < arrayList.size(); i++) {
+                        if (arrayList.get(i) instanceof com.seu.sensors.Sensors.Locations) {
+                            ((Locations) arrayList.get(i)).setState(false);
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        if (location != null) {
+            String device = getDevice();
+            String timestamp = new Date(location.getTime()).toString();
+            String latitude = location.getLatitude() + "";
+            String longitude = location.getLongitude() + "";
+            String bearing = location.getBearing() + "";
+            String speed = location.getSpeed() + "";
+            String altitude = location.getAltitude() + "";
+            String provider = location.getProvider() + "";
+            String accuracy = location.getAccuracy() + "";
+
+            for (int i = 0; i < arrayList.size(); i++) {
+                if (arrayList.get(i) instanceof com.seu.sensors.Sensors.Locations) {
+                    com.seu.sensors.Sensors.Locations g = (com.seu.sensors.Sensors.Locations) arrayList.get(i);
+
+                    g.setTimestamp((timestamp));
+                    g.setAccuracy(Float.parseFloat(accuracy));
+                    g.setAltitude(Float.parseFloat(altitude));
+                    g.setBearing(Float.parseFloat(bearing));
+                    g.setLatitude(Float.parseFloat(latitude));
+                    g.setLongitude(Float.parseFloat(longitude));
+
+                    try {
+                        JSONObject json = new JSONObject();
+                        json.put("device", device);
+                        json.put("timestamp", timestamp);
+                        json.put("latitude", latitude);
+                        json.put("longitude", longitude);
+                        json.put("bearing", bearing);
+                        json.put("speed", speed);
+                        json.put("provider", provider);
+                        json.put("altitude", altitude);
+                        json.put("accuracy", accuracy);
+
+                        if (mqtt.getConnected()) { ///> Hay conexión
+                            sendSaveData("gps");
+                            mqtt.sendMessage("gps", new MqttMessage(json.toString().getBytes()));
+                        } else { ///> No hay conexión
+                            saveData("gps", json);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onStatusChanged(String s, int i, Bundle bundle) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String s) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String s) {
+
+    }
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+
+    }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+
+
+    }
 }
