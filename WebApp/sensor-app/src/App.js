@@ -7,9 +7,20 @@ import {
   Route,
   Link
 } from "react-router-dom";
-import Sensors from './sensors.js';
 
-import 'bootstrap/dist/css/bootstrap.min.css';
+import Sensors from './sensors.js';
+import Clients from './clients.js';
+import Main from './main.js';
+import Login from './login.js';
+
+import './assets/bootstrap/css/bootstrap.min.css';
+import './assets/css/styles.min.css';
+import './assets/css/custom.css';
+import './assets/css/Features-Blue.css';
+import './assets/css/Login-Form-Dark.css';
+import './assets/fonts/ionicons.min.css';
+import './assets/fonts/fontawesome-all.min.css';
+
 import { Container, Col, Navbar, Nav, Row } from 'react-bootstrap';
 import CanvasJSReact from './assets/canvasjs.react';
 
@@ -22,7 +33,7 @@ class NavBarMenu extends Component {
       <Navbar bg="dark" className="sticky-top flex-md-nowrap p-0">
         <Navbar.Brand href="/">
           <img src="/docs/4.4/assets/brand/bootstrap-solid.svg" width="30" height="30" class="d-inline-block align-top" alt=""/>
-          Sensor-app
+          Sensor Monitoring
         </Navbar.Brand>
       </Navbar>
     )
@@ -82,21 +93,6 @@ class Graphic extends Component {
   }
 }
 
-class Main extends Component {
-  render() {
-    return(
-      <main>
-        <NavBarMenu />
-        <Container>
-          <Row>
-            <SideBar />
-          </Row>
-        </Container>
-      </main>
-    )
-  }
-}
-
 class Gyroscope extends Component {
   render() {
     return(
@@ -121,6 +117,9 @@ class App extends Component {
       <Router>
         <Switch>
           <Route exact path="/">
+            <Login />
+          </Route>
+          <Route exact path="/app">
             <Main />
           </Route>
           <Route exact path="/gyroscope">

@@ -1,0 +1,15 @@
+.card.shadow.border-left-info.py-2 {
+  height: 162px;
+}
+
+.card.shadow.border-left-success.py-2 {
+  height: 162px;
+}
+
+.row.align-items-center.no-gutters {
+}
+
+.row.align-items-center.no-gutters.space-margin {
+  margin-top: 19px;
+}
+
