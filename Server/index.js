@@ -6,10 +6,12 @@ const database = require("./database/database");
 const server = require('http').Server(app);
 const session = require("express-session");
 const io = require('socket.io')(server);
+const cors = require('cors');
 
 // Configure sessions
 app.use(session({secret: "cookie", saveUninitialized: true, resave: true}));
 app.use(bodyParser.json());
+app.use(cors()); // Cross-origin
 
 // API GET Methods
 
