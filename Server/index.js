@@ -23,30 +23,27 @@ app.get('/getLastRecordsInFrame', function(req, res){
     // Get session variable
     var sess = req.session;
 
-    // Check if user set a device-id. 
-    if(sess.deviceId){
-        if(database.databaseReady){
-            if (!req.query.sensorName || !req.query.secondsFrame){
-                return res.send("Missing parameters. Example: /getLastInFrame?sensorName=accelerometer&secondsFrame=5");
-            }
-
-            var sensorName = req.query.sensorName;
-            var secondsFrame = Number(req.query.secondsFrame);
-    
-            var data = database.getLastRecordsInSeconds(sensorName, secondsFrame, sess.deviceId);
-    
-            // Send data in JSON format
-            data.then(result => {
-                return res.json(result);
-            });
-    
-        } else {
-            var result = "Database is starting";
-            return res.send(result);
+    if(database.databaseReady){
+        if (!req.query.sensorName || !req.query.secondsFrame){
+            return res.send("Missing parameters. Example: /getLastInFrame?sensorName=accelerometer&secondsFrame=5");
         }
+
+        var sensorName = req.query.sensorName;
+        var secondsFrame = Number(req.query.secondsFrame);
+        var deviceId = req.query.deviceId;
+
+        var data = database.getLastRecordsInSeconds(sensorName, secondsFrame, deviceId);
+
+        // Send data in JSON format
+        data.then(result => {
+            return res.json(result);
+        });
+
     } else {
-        return res.send(null);
+        var result = "Database is starting";
+        return res.send(result);
     }
+
 });
 
 /**
@@ -56,22 +53,20 @@ app.get("/getAvailableSensors", function(req, res){
     // Get session variable.
     var sess = req.session;
 
-    // If session variable is defined.
-    if(sess.deviceId){
-        if(database.databaseReady){
-            var sensorNames = database.getSensorsIdentifiers(sess.deviceId);
+    if(database.databaseReady){
+        var deviceId = req.query.deviceId;
+        var sensorNames = database.getSensorsIdentifiers(deviceId);
 
-            sensorNames.then((result) => {
-                return res.json(result);
-            });
 
-        } else {
-            var result = "Database is starting";
-            return res.send(result);
-        }
+        sensorNames.then((result) => {
+            return res.json(result);
+        });
+
     } else {
-        return res.send(null);
+        var result = "Database is starting";
+        return res.send(result);
     }
+
 })
 
 /**
@@ -82,31 +77,26 @@ app.get('/getLastRecords', function(req, res){
     // Get session variable
     var sess = req.session;
 
-    // Check if user set a device-id. 
-
-    if (sess.deviceId){
-        if(database.databaseReady){
-            // Check if parameters are written in a correct way.
-            if (!req.query.sensorName || !req.query.recordsNumber){
-                return res.send("Missing parameters. Example: /getLastRecords?sensorName=accelerometer&recordsNumber=5");
-            }
-
-            var sensorName = req.query.sensorName;
-            var recordsNumber = Number(req.query.recordsNumber);
-    
-            var data = database.getLast(sensorName, recordsNumber, sess.deviceId);
-    
-            // Send data in JSON format
-            data.then(result => {
-                return res.json(result);
-            });
-    
-        } else {
-            var result = "Database is starting";
-            return res.send(result);
+    if(database.databaseReady){
+        // Check if parameters are written in a correct way.
+        if (!req.query.sensorName || !req.query.recordsNumber){
+            return res.send("Missing parameters. Example: /getLastRecords?sensorName=accelerometer&recordsNumber=5");
         }
+
+        var sensorName = req.query.sensorName;
+        var recordsNumber = Number(req.query.recordsNumber);
+        var deviceId = req.query.deviceId;
+
+        var data = database.getLast(sensorName, recordsNumber, deviceId);
+
+        // Send data in JSON format
+        data.then(result => {
+            return res.json(result);
+        });
+
     } else {
-        return res.send(null);
+        var result = "Database is starting";
+        return res.send(result);
     }
 });
 
@@ -155,38 +145,33 @@ app.get("/chosenDevice", (req, res) => {
 app.get("/getDataOnDate", (req, res) => {
     var sess = req.session;
 
-    if(sess.deviceId){
         
-        var startDate;
-        var endDate;
-        var sensorName = req.query.sensorName;
-        var device = sess.deviceId;
+    var startDate;
+    var endDate;
+    var sensorName = req.query.sensorName;
+    var device = req.query.deviceId;
 
-        // Check if parameters were written in a correct way.
-        if(!req.query.startDate && !req.query.endDate){
-            return res.send(404);
-        } else if (!req.query.startDate){
-            return res.send(404);
-        } else if (!req.query.endDate){
-            endDate = null;
-        }
+    // Check if parameters were written in a correct way.
+    if(!req.query.startDate && !req.query.endDate){
+        return res.send(404);
+    } else if (!req.query.startDate){
+        return res.send(404);
+    } else if (!req.query.endDate){
+        endDate = null;
+    }
 
-        // Call to one method or another depending on endDate == null
+    // Call to one method or another depending on endDate == null
 
-        if(endDate == null){
-            // endDate was not defined
-            var data = database.getDataInDay(device, sensorName, startDate).then((result) =>{
-                return res.json(result);
-            })
-        } else {
-            // endDate was defined so we should call a different method.
-            var data = database.getDataInInterval(device, sensorName, startDate, endDate).then((result) =>{
-                return res.json(result);
-            })
-        }
-
+    if(endDate == null){
+        // endDate was not defined
+        var data = database.getDataInDay(device, sensorName, startDate).then((result) =>{
+            return res.json(result);
+        })
     } else {
-        return res.sendStatus(404);
+        // endDate was defined so we should call a different method.
+        var data = database.getDataInInterval(device, sensorName, startDate, endDate).then((result) =>{
+            return res.json(result);
+        })
     }
 })
 
