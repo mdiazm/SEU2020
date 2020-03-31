@@ -5,8 +5,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.util.Log;
 
-import java.util.Date;
-
 public class Locations extends Sensor {
 
     private String timestamp;
@@ -21,8 +19,6 @@ public class Locations extends Sensor {
     private LocationManager locationManager;
     private static final int LOCATION_REFRESH_TIME = 5000; ///< Minimum time interval between changes
     private static final int LOCATION_REFRESH_DISTANCE = 5; ///< Minimum distance interval between changes
-    private static final int UPDATES_MILLISECONDS = 10000;
-    private static final int FASTEST_INTERVAL = 8000;
 
     public Locations(String name, boolean state, int image, String key, Context c, LocationManager locationManager){
         super(name, state, image, key, c);

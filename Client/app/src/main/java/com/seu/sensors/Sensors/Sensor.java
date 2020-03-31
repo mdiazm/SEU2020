@@ -2,8 +2,6 @@ package com.seu.sensors.Sensors;
 
 import android.content.Context;
 import com.aware.Aware;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
 
 /**
  * Clase que define un sensor por defecto

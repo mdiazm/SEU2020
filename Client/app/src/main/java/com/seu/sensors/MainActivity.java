@@ -10,14 +10,12 @@ import com.seu.sensors.Sensors.Locations;
 import com.seu.sensors.Sensors.Sensor;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.app.Service;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -28,15 +26,12 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.aware.Accelerometer;
 import com.aware.Applications;
@@ -53,7 +48,6 @@ import com.aware.providers.Barometer_Provider;
 import com.aware.providers.Battery_Provider;
 import com.aware.providers.Gyroscope_Provider;
 import com.aware.providers.Light_Provider;
-import com.aware.providers.Locations_Provider;
 import com.aware.providers.Proximity_Provider;
 import com.aware.providers.Temperature_Provider;
 
@@ -123,14 +117,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         ///> Inicializar los observadores de los sensores
         InitListener();
 
-
-
         ///> Guardar los datos de los sensores
         GuardarDatos();
 
         ///> Construir la comunicación MQTT
         mqtt = new MQTT("192.168.0.16");
-        //mqtt = new MQTT("192.168.1.75");
+       // mqtt = new MQTT("178.62.241.158");
         ///> Obtener la MAC del dispositivo
         getMacAddress();
 
@@ -330,9 +322,22 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         float _y = g.getY();
                         float _z = g.getZ();
 
-                        if (Math.abs(_x - Float.parseFloat(x)) > g.getOffset() ||
+                        Date actual = new Date(Long.parseLong(timestamp)) ;
+                        Date anterior = null;
+                        float differencia = 0;
+                        if(g.getTimestamp() != null && g.getTimestamp() != "") {
+                            anterior = new Date(Long.parseLong(g.getTimestamp()));
+                            differencia = Math.abs(actual.getTime() - new Date(Long.parseLong(g.getTimestamp())).getTime());
+
+                        }else {
+                            differencia = 1001;
+                        }
+
+
+                            if (Math.abs(_x - Float.parseFloat(x)) > g.getOffset() ||
                                 Math.abs(_y - Float.parseFloat(y)) > g.getOffset() ||
-                                Math.abs(_z - Float.parseFloat(z)) > g.getOffset()) {
+                                Math.abs(_z - Float.parseFloat(z)) > g.getOffset() &&
+                                differencia > 1000) {
                             g.setX(Float.parseFloat(x));
                             g.setY(Float.parseFloat(y));
                             g.setZ(Float.parseFloat(z));
@@ -382,9 +387,21 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         float _y = g.getY();
                         float _z = g.getZ();
 
+                        Date actual = new Date(Long.parseLong(timestamp)) ;
+                        Date anterior = null;
+                        float differencia = 0;
+                        if(g.getTimestamp() != null && g.getTimestamp() != "") {
+                            anterior = new Date(Long.parseLong(g.getTimestamp()));
+                            differencia = Math.abs(actual.getTime() - new Date(Long.parseLong(g.getTimestamp())).getTime());
+
+                        }else {
+                            differencia = 1001;
+                        }
+
                         if ((Math.abs(_x - Float.parseFloat(x)) > g.getOffset()) ||
                                 (Math.abs(_y - Float.parseFloat(y)) > g.getOffset()) ||
-                                (Math.abs(_z - Float.parseFloat(z)) > g.getOffset())) {
+                                (Math.abs(_z - Float.parseFloat(z)) > g.getOffset()) &&
+                                differencia > 1000) {
                             g.setY(Float.parseFloat(y));
                             g.setZ(Float.parseFloat(z));
                             g.setX(Float.parseFloat(x));
@@ -415,6 +432,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         });
 
         ///> Localización
+        /**
+         * Método para detectar un cambio en la localización
+         * */
         _locationCallback = new LocationCallback(){
             @Override
             public void onLocationResult(LocationResult locationResult){
@@ -502,110 +522,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         fusedLocationClient.requestLocationUpdates(_locationRequest, _locationCallback,null);
 
-       /* fusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
-            @Override
-            public void onSuccess(Location location) {
-                // Got last known location. In some rare situations this can be null.
-                if (location != null) {
-                    String device = getDevice();
-                    String timestamp = new Date(location.getTime()).toString();
-                    String latitude = location.getLatitude() + "";
-                    String longitude = location.getLongitude() + "";
-                    String bearing = location.getBearing() + "";
-                    String speed = location.getSpeed() + "";
-                    String altitude = location.getAltitude() + "";
-                    String provider = location.getProvider() + "";
-                    String accuracy = location.getAccuracy() + "";
 
-                    for (int i = 0; i < arrayList.size(); i++) {
-                        if (arrayList.get(i) instanceof com.seu.sensors.Sensors.Locations) {
-                            com.seu.sensors.Sensors.Locations g = (com.seu.sensors.Sensors.Locations) arrayList.get(i);
-
-                            g.setTimestamp((timestamp));
-                            g.setAccuracy(Float.parseFloat(accuracy));
-                            g.setAltitude(Float.parseFloat(altitude));
-                            g.setBearing(Float.parseFloat(bearing));
-                            g.setLatitude(Float.parseFloat(latitude));
-                            g.setLongitude(Float.parseFloat(longitude));
-
-                            try {
-                                JSONObject json = new JSONObject();
-                                json.put("device", device);
-                                json.put("timestamp", timestamp);
-                                json.put("latitude", latitude);
-                                json.put("longitude", longitude);
-                                json.put("bearing", bearing);
-                                json.put("speed", speed);
-                                json.put("provider", provider);
-                                json.put("altitude", altitude);
-                                json.put("accuracy", accuracy);
-
-                                if (mqtt.getConnected()) { ///> Hay conexión
-                                    sendSaveData("gps");
-                                    mqtt.sendMessage("gps", new MqttMessage(json.toString().getBytes()));
-                                } else { ///> No hay conexión
-                                    saveData("gps", json);
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                }
-            }
-        });*/
-        /**
-         * Método para detectar un cambio en la localización
-         * */
-        /*Locations.setSensorObserver(new Locations.AWARESensorObserver() {
-            @Override
-            public void onLocationChanged(ContentValues data) {
-                String device = getDevice();
-                String timestamp = data.getAsString(Locations_Provider.Locations_Data.TIMESTAMP);
-                String latitude = data.getAsString(Locations_Provider.Locations_Data.LATITUDE);
-                String longitude = data.getAsString(Locations_Provider.Locations_Data.LONGITUDE);
-                String bearing = data.getAsString(Locations_Provider.Locations_Data.BEARING);
-                String speed = data.getAsString(Locations_Provider.Locations_Data.SPEED);
-                String altitude = data.getAsString(Locations_Provider.Locations_Data.ALTITUDE);
-                String provider = data.getAsString(Locations_Provider.Locations_Data.PROVIDER);
-                String accuracy = data.getAsString(Locations_Provider.Locations_Data.ACCURACY);
-
-                for (int i = 0; i < arrayList.size(); i++) {
-                    if (arrayList.get(i) instanceof com.seu.sensors.Sensors.Locations) {
-                        com.seu.sensors.Sensors.Locations g = (com.seu.sensors.Sensors.Locations) arrayList.get(i);
-
-                        g.setTimestamp((timestamp));
-                        g.setAccuracy(Float.parseFloat(accuracy));
-                        g.setAltitude(Float.parseFloat(altitude));
-                        g.setBearing(Float.parseFloat(bearing));
-                        g.setLatitude(Float.parseFloat(latitude));
-                        g.setLongitude(Float.parseFloat(longitude));
-
-                        try {
-                            JSONObject json = new JSONObject();
-                            json.put("device", device);
-                            json.put("timestamp", timestamp);
-                            json.put("latitude", latitude);
-                            json.put("longitude", longitude);
-                            json.put("bearing", bearing);
-                            json.put("speed", speed);
-                            json.put("provider", provider);
-                            json.put("altitude", altitude);
-                            json.put("accuracy", accuracy);
-
-                            if (mqtt.getConnected()) { ///> Hay conexión
-                                sendSaveData("gps");
-                                mqtt.sendMessage("gps", new MqttMessage(json.toString().getBytes()));
-                            } else { ///> No hay conexión
-                                saveData("gps", json);
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-        });*/
 
         ///> Luminosidad
         Light.setSensorObserver(new Light.AWARESensorObserver() {
@@ -622,11 +539,25 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     if (arrayList.get(i) instanceof com.seu.sensors.Sensors.Light) {
                         com.seu.sensors.Sensors.Light g = (com.seu.sensors.Sensors.Light) arrayList.get(i);
 
+                        Date actual = new Date(Long.parseLong(timestamp)) ;
+                        Date anterior = null;
+                        float differencia = 0;
+                        if(g.getTimestamp() != null && g.getTimestamp() != "") {
+                            anterior = new Date(Long.parseLong(g.getTimestamp()));
+                            differencia = Math.abs(actual.getTime() - new Date(Long.parseLong(g.getTimestamp())).getTime());
+
+                        }else {
+                            differencia = 1001;
+                        }
+
                         if ((Math.abs(g.getX() - Float.parseFloat(lux)) > g.getOffset()) ||
                                 (Math.abs(g.getX() - Float.parseFloat(lux)) > g.getOffset()) ||
-                                (Math.abs(g.getX() - Float.parseFloat(lux)) > g.getOffset())) {
+                                (Math.abs(g.getX() - Float.parseFloat(lux)) > g.getOffset()) &&
+                        differencia > 1000) {
                             g.setX(Float.parseFloat(lux));
                             g.setTimestamp((timestamp));
+
+
 
                             try {
                                 JSONObject json = new JSONObject();
@@ -665,9 +596,22 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 for (int i = 0; i < arrayList.size(); i++) {
                     if (arrayList.get(i) instanceof com.seu.sensors.Sensors.Proximity) {
                         com.seu.sensors.Sensors.Proximity g = (com.seu.sensors.Sensors.Proximity) arrayList.get(i);
+
+                        Date actual = new Date(Long.parseLong(timestamp)) ;
+                        Date anterior = null;
+                        float differencia = 0;
+                        if(g.getTimestamp() != null && g.getTimestamp() != "") {
+                            anterior = new Date(Long.parseLong(g.getTimestamp()));
+                            differencia = Math.abs(actual.getTime() - new Date(Long.parseLong(g.getTimestamp())).getTime());
+
+                        }else {
+                            differencia = 1001;
+                        }
+
                         if ((Math.abs(g.getProximity() - Float.parseFloat(proximity)) > g.getOffset()) ||
                                 (Math.abs(g.getProximity() - Float.parseFloat(proximity)) > g.getOffset()) ||
-                                (Math.abs(g.getProximity() - Float.parseFloat(proximity)) > g.getOffset())) {
+                                (Math.abs(g.getProximity() - Float.parseFloat(proximity)) > g.getOffset()) &&
+                                differencia > 1000) {
                             g.setProximity(Float.parseFloat(proximity));
                             g.setTimestamp((timestamp));
 
@@ -709,9 +653,22 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 for (int i = 0; i < arrayList.size(); i++) {
                     if (arrayList.get(i) instanceof com.seu.sensors.Sensors.Battery) {
                         com.seu.sensors.Sensors.Battery g = (com.seu.sensors.Sensors.Battery) arrayList.get(i);
+
+                        Date actual = new Date(Long.parseLong(timestamp)) ;
+                        Date anterior = null;
+                        float differencia = 0;
+                        if(g.getTimestamp() != null && g.getTimestamp() != "") {
+                            anterior = new Date(Long.parseLong(g.getTimestamp()));
+                            differencia = Math.abs(actual.getTime() - new Date(Long.parseLong(g.getTimestamp())).getTime());
+
+                        }else {
+                            differencia = 1001;
+                        }
+
                         if ((Math.abs(g.getLevel() - Float.parseFloat(level)) > g.getOffset()) ||
                                 (Math.abs(g.getLevel() - Float.parseFloat(level)) > g.getOffset()) ||
-                                (Math.abs(g.getLevel() - Float.parseFloat(level)) > g.getOffset())) {
+                                (Math.abs(g.getLevel() - Float.parseFloat(level)) > g.getOffset()) &&
+                                differencia > 1000) {
                             g.setLevel(Float.parseFloat(level));
                             g.setVoltage(Float.parseFloat(voltage));
                             g.setScale(Float.parseFloat(scale));
@@ -982,7 +939,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
             arrayList.add(new com.seu.sensors.Sensors.Gyroscope("Giroscopio", item, R.drawable.ic_action_gyroscope, "giroscopio", this));
             if (item) {
-                ///> Giroscopio
                 Aware.setSetting(this, Aware_Preferences.FREQUENCY_GYROSCOPE, 200000);
                 Aware.setSetting(this, Aware_Preferences.THRESHOLD_GYROSCOPE, 0.02f);
                 Aware.startGyroscope(this);
