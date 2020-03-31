@@ -121,8 +121,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         GuardarDatos();
 
         ///> Construir la comunicación MQTT
-        mqtt = new MQTT("192.168.0.16");
-       // mqtt = new MQTT("178.62.241.158");
+        //mqtt = new MQTT("192.168.0.16");
+        mqtt = new MQTT("178.62.241.158");
         ///> Obtener la MAC del dispositivo
         getMacAddress();
 
