@@ -304,3 +304,4 @@ typings/
 
 # dotenv environment variables file
 .env
+Diagrams/.SensorMonitoring.vpp.lck
