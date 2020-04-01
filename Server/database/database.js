@@ -155,9 +155,6 @@ function insertData(data){
     data.save((err, item) => {
         if(err) return console.error(err);
     })
-
-    // Update available collections.
-    getSensorsIdentifiers();
 }
 
 // Export function to insert data
