@@ -1,40 +1,30 @@
 import React, { Component } from 'react';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link
-} from "react-router-dom";
 
 import Sensors from './sensors.js';
 import { Graphic } from './graphics.js';
+import { TableCoordinates } from './tables.js';
 
+var datos = []
 class BatteryInfo extends Component {
 	constructor(props) {
 			super(props);
-			this.state = { battery: "" };
+			this.state = { battery: "", cadena: "prueba" };
 	}
 
 	async componentDidMount() {
-			var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=battery&secondsFrame=1&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+			var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=battery&secondsFrame=120&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
 
 			let res = await fetch(cadena)
 			let data = await res.json()
 
 			this.setState({ battery: data[0] })
 	}
-//<div class="progress-bar" role="progressbar" style="width:{{this.state.battery['level']%}}"></div>
 	render() {
 			return (
 				<div class="row no-gutters align-items-center">
 					<div class="col-auto">
 						<div class="text-dark font-weight-bold h5 mb-0 mr-3">
-							<span>{this.state.battery["level"]}</span>
-						</div>
-					</div>
-					<div class="col">
-						<div class="progress progress-sm">
-							<div class="progress-bar" role="progressbar" style={{width: '78%'}}></div>
+							<span>{this.state.battery["level"]}%</span>
 						</div>
 					</div>
 				</div>
@@ -56,7 +46,6 @@ class LightInfo extends Component {
 
 			this.setState({ light: data[0] })
 	}
-//<div class="progress-bar" role="progressbar" style="width:{{this.state.battery['level']%}}"></div>
 	render() {
 			return (
 				<div>
@@ -83,7 +72,7 @@ class Status extends Component {
 	}
 
 	render() {
-		if ( this.state.status["value"] != "discharging" ) {
+		if ( this.state.status["value"] !== "discharging" ) {
 			return (
 				<span>Cargando</span>
 			)
@@ -153,13 +142,20 @@ class Main extends Component {
         this.state = { sensors: [] };
     }
 
-    componentDidMount() {
+    async componentDidMount() {
         fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=ffffffff-e16c-f9c0-0000-000075b319f8')
         .then(res => res.json())
         .then((data) => {
           this.setState({ sensors: data })
         })
-        .catch(console.log)
+				.catch(console.log)
+				
+				var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=accelerometer&secondsFrame=60&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+				console.log(cadena)
+				let res = await fetch(cadena)
+				let data = await res.json()
+
+				datos = data
     }
 
     render() {
@@ -177,7 +173,6 @@ class Main extends Component {
                   <li class="nav-item" role="presentation"><a class="nav-link active" href="/app"><span>Inicio</span></a></li>
                       <Sensors sensors={this.state.sensors}/>
                   </ul>
-                  <div class="text-center d-none d-md-inline"><button class="btn rounded-circle border-0" id="sidebarToggle" type="button"></button></div>
               </div>
           </nav>
           <div class="d-flex flex-column" id="content-wrapper">
@@ -205,10 +200,8 @@ class Main extends Component {
                   </nav>
                   <div class="container-fluid">
                       <div class="d-sm-flex justify-content-between align-items-center mb-4">
-                          <h3 class="text-dark mb-0">Inicio</h3>
                       </div>
                       <div class="row">
-                          
                           <div class="col-md-6 col-xl-4 mb-4">
                               <div class="card shadow border-left-success py-2">
                                   <div class="card-body">
@@ -314,7 +307,21 @@ class Main extends Component {
                                   <div class="card-header d-flex justify-content-between align-items-center">
                                       <h6 class="text-primary font-weight-bold m-0">Datos</h6>
                                   </div>
-                                  <div class="card-body"></div>
+                                  <div class="card-body">
+																		<table class="table table-responsive">
+																			<thead>
+																				<tr>
+																					<th>Hora</th>
+																					<th>X</th>
+																					<th>Y</th>
+																					<th>Z</th>
+																				</tr>
+																			</thead>
+																			<tbody>
+																				<TableCoordinates data={datos} />
+																			</tbody>
+																		</table>
+																	</div>
                               </div>
                           </div>
                       </div>

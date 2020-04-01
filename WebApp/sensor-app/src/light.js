@@ -1,16 +1,11 @@
 import React, { Component } from 'react';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link
-} from "react-router-dom";
 
-import { Container, Col, Navbar, Nav, Row } from 'react-bootstrap';
 import CanvasJSReact from './assets/canvasjs.react';
 
 import Sensors from './sensors.js';
+import { TableLightValue } from './tables.js';
 
+var datos = [];
 class Light extends Component {
     state = {
       mydata: [],
@@ -41,7 +36,6 @@ class Light extends Component {
                   <li class="nav-item" role="presentation"><a class="nav-link active" href="/app"><span>Inicio</span></a></li>
                       <Sensors sensors={this.state.sensors}/>
                   </ul>
-                  <div class="text-center d-none d-md-inline"><button class="btn rounded-circle border-0" id="sidebarToggle" type="button"></button></div>
               </div>
           </nav>
           <div class="d-flex flex-column" id="content-wrapper">
@@ -69,11 +63,30 @@ class Light extends Component {
                   </nav>
                   <div class="container-fluid">
                       <div class="d-sm-flex justify-content-between align-items-center mb-4">
-                          <h3 class="text-dark mb-0">Inicio</h3>
+                          
                       </div>
                       <div class="row">
                         <div class="col-lg-12 mb-4">
                           <Graphic sensor={window.location.pathname} />
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="col-lg-12 mb-4">
+                          <div class="card">
+                            <div class="card-body">
+                              <table class="table">
+                                <thead>
+                                  <tr>
+                                    <th>Hora</th>
+                                    <th>Valor</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <TableLightValue data={datos} value={"lux"} />
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
                         </div>
                       </div>
                   </div>
@@ -101,12 +114,13 @@ class Graphic extends Component {
   async componentDidMount() {
     const sensor = this.props.sensor;
     var chart = this.chart;
-    var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=' + sensor.substring(1, sensor.length) + '&secondsFrame=120&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+    var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=' + sensor.substring(1, sensor.length) + '&secondsFrame=86400&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
     console.log(cadena)
     let res = await fetch(cadena)
     let data = await res.json()
 
     this.setState({ data })
+    datos = data
     console.log(data)
     data.map((da) => {
       console.log(da)
@@ -120,6 +134,9 @@ class Graphic extends Component {
 
   render() {
     const options = {
+        animationEnabled: true,
+		zoomEnabled: true,
+		exportEnabled: true,
       title: {
         text: "Datos del sensor"
       },

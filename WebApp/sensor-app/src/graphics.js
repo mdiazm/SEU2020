@@ -1,16 +1,10 @@
 import React, { Component } from 'react';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link
-} from "react-router-dom";
-
-import { Container, Col, Navbar, Nav, Row } from 'react-bootstrap';
 import CanvasJSReact from './assets/canvasjs.react';
 
 import Sensors from './sensors.js';
+import { TableCoordinates } from './tables.js';
 
+var datos = [];
 class Graphics extends Component {
     state = {
       mydata: [],
@@ -18,12 +12,12 @@ class Graphics extends Component {
     }
   
     componentDidMount() {
-          fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=00000000-5561-036d-0000-000075b319f8')
-          .then(res => res.json())
-          .then((data) => {
-            this.setState({ sensors: data })
-          })
-          .catch(console.log)
+      fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=00000000-5561-036d-0000-000075b319f8')
+      .then(res => res.json())
+      .then((data) => {
+        this.setState({ sensors: data })
+      })
+      .catch(console.log)
     }
   
     render() {
@@ -41,7 +35,6 @@ class Graphics extends Component {
                   <li class="nav-item" role="presentation"><a class="nav-link active" href="/app"><span>Inicio</span></a></li>
                       <Sensors sensors={this.state.sensors}/>
                   </ul>
-                  <div class="text-center d-none d-md-inline"><button class="btn rounded-circle border-0" id="sidebarToggle" type="button"></button></div>
               </div>
           </nav>
           <div class="d-flex flex-column" id="content-wrapper">
@@ -76,6 +69,27 @@ class Graphics extends Component {
                           <Graphic sensor={window.location.pathname} />
                         </div>
                       </div>
+                      <div class="row">
+                        <div class="col-lg-12 mb-4">
+                          <div class="card">
+                            <div class="card-body">
+                              <table class="table">
+                                <thead>
+                                  <tr>
+                                    <th>Hora</th>
+                                    <th>X</th>
+                                    <th>Y</th>
+                                    <th>Z</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <TableCoordinates data={datos} />
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                   </div>
               </div></div></div>
               <script src="./assets/js/jquery.min.js" type="text/babel"></script>
@@ -93,6 +107,8 @@ var CanvasJS = CanvasJSReact.CanvasJS;
 var CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
 var dataPoints = [];
+var dataPointsY = [];
+var dataPointsZ = [];
 class Graphic extends Component {
   state = {
     data: []
@@ -102,33 +118,58 @@ class Graphic extends Component {
     var sensor = this.props.sensor
     console.log(sensor)
     var chart = this.chart;
-    var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=' + sensor.substring(1, sensor.length) + '&secondsFrame=60&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
-    console.log(cadena)
+    var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=' + sensor.substring(1, sensor.length) + '&secondsFrame=86400&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
     let res = await fetch(cadena)
     let data = await res.json()
 
+    datos = data
     this.setState({ data })
-    console.log(data)
+    
     data.map((da) => {
-      console.log(da)
       dataPoints.push({
         x: new Date(da["timestamp"]),
         y: da["x"]
       })
+      if ( da["y"] != null ) {
+        dataPointsY.push({
+          x: new Date(da["timestamp"]),
+        y: da["y"]
+        })
+      }
+      if ( da["z"] != null ) {
+        dataPointsZ.push({
+          x: new Date(da["timestamp"]),
+        y: da["z"]
+        })
+      }
     })
     chart.render();
   }
 
   render() {
     const options = {
+      animationEnabled: true,
+			zoomEnabled: true,
+			exportEnabled: true,
       title: {
         text: "Datos del sensor"
       },
       data: [{				
-                type: "line",
-                xValueFormatString: "h:m:s",
-                dataPoints: dataPoints
-        }]
+          type: "line",
+          xValueFormatString: "h:m:s",
+          dataPoints: dataPoints
+        },
+        {
+          type: "line",
+          xValueFormatString: "h:m:s",
+          dataPoints: dataPointsY
+        },
+        {
+          type: "line",
+          xValueFormatString: "h:m:s",
+          dataPoints: dataPointsZ
+        }
+      ]
   }
       
     return (
