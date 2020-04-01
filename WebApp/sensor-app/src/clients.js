@@ -10,7 +10,7 @@ const Clients = ({ clients }) => {
     if (clients) {
         return (
         clients.map((client) =>
-                <option value={ client._id }>{ client.device }</option>
+                <option value={ client.device }>{ client.device }</option>
             )
         )
     } else {

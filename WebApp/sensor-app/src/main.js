@@ -7,20 +7,160 @@ import {
 } from "react-router-dom";
 
 import Sensors from './sensors.js';
+import { Graphic } from './graphics.js';
+
+class BatteryInfo extends Component {
+	constructor(props) {
+			super(props);
+			this.state = { battery: "" };
+	}
+
+	async componentDidMount() {
+			var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=battery&secondsFrame=1&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+
+			let res = await fetch(cadena)
+			let data = await res.json()
+
+			this.setState({ battery: data[0] })
+	}
+//<div class="progress-bar" role="progressbar" style="width:{{this.state.battery['level']%}}"></div>
+	render() {
+			return (
+				<div class="row no-gutters align-items-center">
+					<div class="col-auto">
+						<div class="text-dark font-weight-bold h5 mb-0 mr-3">
+							<span>{this.state.battery["level"]}</span>
+						</div>
+					</div>
+					<div class="col">
+						<div class="progress progress-sm">
+							<div class="progress-bar" role="progressbar" style={{width: '78%'}}></div>
+						</div>
+					</div>
+				</div>
+			)
+	}
+}
+
+class LightInfo extends Component {
+	constructor(props) {
+			super(props);
+			this.state = { light: "" };
+	}
+
+	async componentDidMount() {
+			var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=light&secondsFrame=1&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+
+			let res = await fetch(cadena)
+			let data = await res.json()
+
+			this.setState({ light: data[0] })
+	}
+//<div class="progress-bar" role="progressbar" style="width:{{this.state.battery['level']%}}"></div>
+	render() {
+			return (
+				<div>
+					<span>{this.state.light["lux"]}</span>
+				</div>
+			)
+	}
+}
+
+class Status extends Component {
+	constructor(props) {
+			super(props);
+			this.state = { status: "" };
+	}
+
+	async componentDidMount() {
+			var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=status&secondsFrame=1&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+
+			let res = await fetch(cadena)
+			let data = await res.json()
+
+			this.setState({ status: data[0] })
+			console.log(data)
+	}
+
+	render() {
+		if ( this.state.status["value"] != "discharging" ) {
+			return (
+				<span>Cargando</span>
+			)
+		} else {
+			return (
+				<span>No se está cargando</span>
+			)
+		}
+	}
+}
+
+var fecha;
+class History extends Component {
+	constructor(props) {
+			super(props);
+			this.state = { status: "" };
+	}
+
+	async componentDidMount() {
+			var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=status&secondsFrame=1&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+
+			let res = await fetch(cadena)
+			let data = await res.json()
+
+			this.setState({ status: data[0] })
+			console.log(data)
+			fecha = new Date(this.state.status["timestamp"])
+			console.log(fecha.toString())
+			fecha = fecha.getHours() + ":" + fecha.getMinutes() + ":" + fecha.getSeconds() + " | " + fecha.getDate() + "/" + (fecha.getMonth()+1) + "/" + fecha.getFullYear()
+	}
+
+	render() {
+		return (
+			<span>{fecha}</span>
+		)
+	}
+}
+
+var device;
+class Device extends Component {
+	constructor(props) {
+			super(props);
+			this.state = { status: "" };
+	}
+
+	async componentDidMount() {
+			var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=status&secondsFrame=1&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+
+			let res = await fetch(cadena)
+			let data = await res.json()
+
+			this.setState({ status: data[0] })
+			console.log(data)
+			device = this.state.status["device"].substring(24, this.state.status["device"].length)
+	}
+
+	render() {
+		return (
+			<span>{device}</span>
+		)
+	}
+}
 
 class Main extends Component {
-    state = {
-        sensors: []
+    constructor(props) {
+        super(props);
+        this.state = { sensors: [] };
     }
 
     componentDidMount() {
-        fetch('https://cors-anywhere.herokuapp.com/http://178.62.241.158:3000/getAvailableSensors')
+        fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=ffffffff-e16c-f9c0-0000-000075b319f8')
         .then(res => res.json())
         .then((data) => {
-          this.setState({ sensors: data})
+          this.setState({ sensors: data })
         })
         .catch(console.log)
-      }
+    }
 
     render() {
       return(
@@ -30,16 +170,12 @@ class Main extends Component {
               <div class="container-fluid d-flex flex-column p-0">
                   <a class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="#">
                       <div class="sidebar-brand-icon rotate-n-15"></div>
-                      <div class="sidebar-brand-text mx-3"><span>Sensor Monitoring</span></div>
+                      <div class="sidebar-brand-text mx-2"><span>Sensor Monitoring</span></div>
                   </a>
                   <hr class="sidebar-divider my-0"/>
                   <ul class="nav navbar-nav text-light" id="accordionSidebar">
-                      <Sensors />
-                      <li class="nav-item" role="presentation"><a class="nav-link active" href="index.html"><i class="fas fa-home"></i><span>Inicio</span></a></li>
-                      <li class="nav-item" role="presentation"><a class="nav-link" href="profile.html"><i class="fas fa-user fas fa-asterisk"></i><span>Gyroscope</span></a></li>
-                      <li class="nav-item" role="presentation"><a class="nav-link" href="table.html"><i class="fas fa-ruler-combined"></i><span>Proximity</span></a></li>
-                      <li class="nav-item" role="presentation"><a class="nav-link" href="blank.html"><i class="fab fa-cloudscale"></i><span>Accelerometer</span></a></li>
-                      <li class="nav-item" role="presentation"><a class="nav-link" href="blank.html"><i class="fas fa-lightbulb"></i><span>Light</span></a></li>
+                  <li class="nav-item" role="presentation"><a class="nav-link active" href="/app"><span>Inicio</span></a></li>
+                      <Sensors sensors={this.state.sensors}/>
                   </ul>
                   <div class="text-center d-none d-md-inline"><button class="btn rounded-circle border-0" id="sidebarToggle" type="button"></button></div>
               </div>
@@ -72,94 +208,91 @@ class Main extends Component {
                           <h3 class="text-dark mb-0">Inicio</h3>
                       </div>
                       <div class="row">
-                          <div class="col-md-6 col-xl-3 mb-4">
-                              <div class="card shadow border-left-primary py-2">
-                                  <div class="card-body">
-                                      <div class="row align-items-center no-gutters">
-                                          <div class="col mr-2">
-                                              <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"></div>
-                                          </div>
-                                          <div class="col-auto">
-                                              nada
-                                          </div>
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
-                          <div class="col-md-6 col-xl-3 mb-4">
+                          
+                          <div class="col-md-6 col-xl-4 mb-4">
                               <div class="card shadow border-left-success py-2">
                                   <div class="card-body">
                                       <div class="row align-items-center no-gutters">
                                           <div class="col mr-2">
-                                              <div class="text-uppercase text-success font-weight-bold text-xs mb-1"><span>REGISTRO BATERÍA</span></div>
-                                              <div class="text-dark font-weight-bold h5 mb-0"><span>58%</span></div>
+                                              <div class="text-uppercase text-success font-weight-bold text-xs mb-1">
+																								<span>BATERÍA ACTUAL</span>
+																							</div>
+																							<BatteryInfo />
                                           </div>
                                           <div class="col-auto"><i class="fas fa-battery-half fa-2x text-gray-300"></i></div>
                                       </div>
                                       <div class="row align-items-center no-gutters space-margin">
                                           <div class="col mr-2">
-                                              <div class="text-uppercase text-success font-weight-bold text-xs mb-1"><span>Media luminosidad</span></div>
-                                              <div class="text-dark font-weight-bold h5 mb-0"><span>352</span></div>
+                                              <div class="text-uppercase text-success font-weight-bold text-xs mb-1">
+																								<span>ESTADO DEL DISPOSITIVO</span>
+																							</div>
+                                              <div class="text-dark font-weight-bold h5 mb-0">
+																								<Status />
+																							</div>
                                           </div>
-                                          <div class="col-auto"><i class="far fa-lightbulb fa-2x text-gray-300"></i></div>
+                                          <div class="col-auto"><i class="fas fa-charging-station fa-2x text-gray-300"></i></div>
                                       </div>
                                   </div>
                               </div>
                           </div>
-                          <div class="col-md-6 col-xl-3 mb-4">
+                          <div class="col-md-6 col-xl-4 mb-4">
                               <div class="card shadow border-left-info py-2">
                                   <div class="card-body">
                                       <div class="row align-items-center no-gutters">
                                           <div class="col mr-2">
-                                              <div class="text-uppercase text-info font-weight-bold text-xs mb-1"><span>Tasks</span></div>
+                                              <div class="text-uppercase text-info font-weight-bold text-xs mb-1">
+																								<span>LUZ AMBIENTE ACTUAL</span>
+																							</div>
                                               <div class="row no-gutters align-items-center">
                                                   <div class="col-auto">
-                                                      <div class="text-dark font-weight-bold h5 mb-0 mr-3"><span>50%</span></div>
-                                                  </div>
-                                                  <div class="col">
-                                                      <div class="progress progress-sm">
-                                                          nada
-                                                      </div>
+                                                      <div class="text-dark font-weight-bold h5 mb-0 mr-3"><LightInfo /></div>
                                                   </div>
                                               </div>
                                           </div>
-                                          <div class="col-auto"><i class="fas fa-clipboard-list fa-2x text-gray-300"></i></div>
+                                          <div class="col-auto"><i class="fas fa-lightbulb fa-2x text-gray-300"></i></div>
                                       </div>
                                       <div class="row align-items-center no-gutters space-margin">
                                           <div class="col mr-2">
-                                              <div class="text-uppercase text-info font-weight-bold text-xs mb-1"><span>Tasks</span></div>
+                                              <div class="text-uppercase text-info font-weight-bold text-xs mb-1">
+																								<span>LUZ MEDIA AMBIENTE</span>
+																							</div>
                                               <div class="row no-gutters align-items-center">
                                                   <div class="col-auto">
-                                                      <div class="text-dark font-weight-bold h5 mb-0 mr-3"><span>50%</span></div>
-                                                  </div>
-                                                  <div class="col">
-                                                      <div class="progress progress-sm">
-                                                          nada
-                                                      </div>
+                                                      <div class="text-dark font-weight-bold h5 mb-0 mr-3">
+																												<span>Suficiente</span>
+																											</div>
                                                   </div>
                                               </div>
                                           </div>
-                                          <div class="col-auto"><i class="fas fa-clipboard-list fa-2x text-gray-300"></i></div>
+                                          <div class="col-auto"><i class="fas fa-sun fa-2x text-gray-300"></i></div>
                                       </div>
                                   </div>
                               </div>
                           </div>
-                          <div class="col-md-6 col-xl-3 mb-4">
+                          <div class="col-md-6 col-xl-4 mb-4">
                               <div class="card shadow border-left-warning py-2">
                                   <div class="card-body">
                                       <div class="row align-items-center no-gutters">
                                           <div class="col mr-2">
-                                              <div class="text-uppercase text-warning font-weight-bold text-xs mb-1"><span>Pending Requests</span></div>
-                                              <div class="text-dark font-weight-bold h5 mb-0"><span>18</span></div>
+                                              <div class="text-uppercase text-warning font-weight-bold text-xs mb-1">
+																								<span>Última actualización</span>
+																							</div>
+                                              <div class="text-dark font-weight-bold h5 mb-0">
+																								<History/>
+																							</div>
                                           </div>
-                                          <div class="col-auto"><i class="fas fa-comments fa-2x text-gray-300"></i></div>
+                                          <div class="col-auto"><i class="fas fa-info-circle fa-2x text-gray-300"></i></div>
                                       </div>
                                       <div class="row align-items-center no-gutters space-margin">
                                           <div class="col mr-2">
-                                              <div class="text-uppercase text-warning font-weight-bold text-xs mb-1"><span>Pending Requests</span></div>
-                                              <div class="text-dark font-weight-bold h5 mb-0"><span>18</span></div>
+                                              <div class="text-uppercase text-warning font-weight-bold text-xs mb-1">
+																								<span>ID de dispositivo</span>
+																							</div>
+                                              <div class="text-dark font-weight-bold h5 mb-0">
+																								<Device />
+																							</div>
                                           </div>
-                                          <div class="col-auto"><i class="fas fa-comments fa-2x text-gray-300"></i></div>
+                                          <div class="col-auto"><i class="fas fa-id-badge fa-2x text-gray-300"></i></div>
                                       </div>
                                   </div>
                               </div>
@@ -169,26 +302,17 @@ class Main extends Component {
                           <div class="col-lg-7 col-xl-8">
                               <div class="card shadow mb-4">
                                   <div class="card-header d-flex justify-content-between align-items-center">
-                                      <h6 class="text-primary font-weight-bold m-0">Gyroscope</h6>
-                                      <div class="dropdown no-arrow"><button class="btn btn-link btn-sm dropdown-toggle" data-toggle="dropdown" aria-expanded="false" type="button"><i class="fas fa-ellipsis-v text-gray-400"></i></button>
-                                          <div class="dropdown-menu shadow dropdown-menu-right animated--fade-in" role="menu">
-                                              <p class="text-center dropdown-header">dropdown header:</p><a class="dropdown-item" role="presentation" href="#">&nbsp;Action</a><a class="dropdown-item" role="presentation" href="#">&nbsp;Another action</a>
-                                              <div class="dropdown-divider"></div><a class="dropdown-item" role="presentation" href="#">&nbsp;Something else here</a></div>
-                                      </div>
+                                      <h6 class="text-primary font-weight-bold m-0">Accelerometer</h6>
                                   </div>
-                                  <div class="card-body"></div>
+                                  <div class="card-body">
+																		<Graphic sensor={"/accelerometer"} />
+																	</div>
                               </div>
                           </div>
                           <div class="col-lg-5 col-xl-4">
                               <div class="card shadow mb-4">
                                   <div class="card-header d-flex justify-content-between align-items-center">
                                       <h6 class="text-primary font-weight-bold m-0">Datos</h6>
-                                      <div class="dropdown no-arrow"><button class="btn btn-link btn-sm dropdown-toggle" data-toggle="dropdown" aria-expanded="false" type="button"><i class="fas fa-ellipsis-v text-gray-400"></i></button>
-                                          <div class="dropdown-menu shadow dropdown-menu-right animated--fade-in"
-                                              role="menu">
-                                              <p class="text-center dropdown-header">dropdown header:</p><a class="dropdown-item" role="presentation" href="#">&nbsp;Action</a><a class="dropdown-item" role="presentation" href="#">&nbsp;Another action</a>
-                                              <div class="dropdown-divider"></div><a class="dropdown-item" role="presentation" href="#">&nbsp;Something else here</a></div>
-                                      </div>
                                   </div>
                                   <div class="card-body"></div>
                               </div>
