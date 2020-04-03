@@ -9,24 +9,21 @@ import socketIOClient from "socket.io-client";
 
 var datos = [];
 class Light extends Component {
-    state = {
+  constructor(props) {
+    super(props)
+    this.state = {
       mydata: [],
-      sensors: [],
-      response: false,
-      endpoint: "http://178.62.241.158:3000"
+      sensors: []
     }
+  }
   
     componentDidMount() {
-      fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=00000000-5561-036d-0000-000075b319f8')
+      fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=ffffffff-e16c-f9c0-0000-000075b319f8')
       .then(res => res.json())
       .then((data) => {
         this.setState({ sensors: data })
       })
       .catch(console.log)
-
-      const socket = socketIOClient(this.state.endpoint, {"forceNew": true});
-      socket.emit('subscribe', '00000000-5561-036d-0000-000075b319f8')
-      socket.on("message", data => this.state({ sensors: data} ));
     }
   
     render() {
@@ -113,46 +110,60 @@ class Light extends Component {
 var CanvasJS = CanvasJSReact.CanvasJS;
 var CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
-var dataPoints = [];
 class Graphic extends Component {
   state = {
-    data: []
+    data: [],
+    response: false,
+    endpoint: "http://178.62.241.158:3000",
+    dataPoints: []
   }
 
   async componentDidMount() {
     const sensor = this.props.sensor;
     var chart = this.chart;
     var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=' + sensor.substring(1, sensor.length) + '&secondsFrame=86400&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
-    console.log(cadena)
     let res = await fetch(cadena)
     let data = await res.json()
 
+    const socket = socketIOClient(this.state.endpoint, {"forceNew": true});
+      socket.emit('subscribe', 'ffffffff-e16c-f9c0-0000-000075b319f8')
+      socket.on("message", (message) => {
+        if ( message.sensor == "light" ) {
+          var aux = this.state.dataPoints
+          var auxData = JSON.parse(message.data)
+          aux.push({ x: new Date(message.timestamp), y: parseInt(auxData.lux) })
+          
+          this.setState({ dataPoints: aux })
+          chart.render();
+        }
+     });
+
     this.setState({ data })
     datos = data
-    console.log(data)
+    var aux = []
     data.map((da) => {
-      console.log(da)
-      dataPoints.push({
+      aux.push({
         x: new Date(da["timestamp"]),
         y: da["lux"]
       })
     })
+    this.setState({ dataPoints: aux })
     chart.render();
   }
 
   render() {
     const options = {
-        animationEnabled: true,
-		zoomEnabled: true,
-		exportEnabled: true,
-      title: {
-        text: "Datos del sensor"
-      },
-      data: [{				
-                type: "line",
-                xValueFormatString: "h:m:s",
-                dataPoints: dataPoints
-        }]
+    animationEnabled: true,
+    zoomEnabled: true,
+    exportEnabled: true,
+    title: {
+      text: "Datos del sensor"
+    },
+    data: [{				
+      type: "line",
+      xValueFormatString: "h:m:s",
+      dataPoints: this.state.dataPoints
+    }]
   }
       
     return (

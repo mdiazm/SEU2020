@@ -14,7 +14,7 @@ class Proximity extends Component {
     }
   
     componentDidMount() {
-      fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=00000000-5561-036d-0000-000075b319f8')
+      fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=ffffffff-e16c-f9c0-0000-000075b319f8')
       .then(res => res.json())
       .then((data) => {
         this.setState({ sensors: data })
@@ -22,7 +22,7 @@ class Proximity extends Component {
       .catch(console.log)
 
       const socket = socketIOClient(this.state.endpoint, {"forceNew": true});
-      socket.emit('subscribe', '00000000-5561-036d-0000-000075b319f8')
+      socket.emit('subscribe', 'ffffffff-e16c-f9c0-0000-000075b319f8')
       socket.on("message", data => this.state({ sensors: data} ));
     }
   
@@ -110,30 +110,45 @@ class Proximity extends Component {
 var CanvasJS = CanvasJSReact.CanvasJS;
 var CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
-var dataPoints = [];
+
 class Graphic extends Component {
   state = {
-    data: []
+    data: [],
+    response: false,
+    endpoint: "http://178.62.241.158:3000",
+    dataPoints: []
   }
 
   async componentDidMount() {
     const sensor = this.props.sensor;
     var chart = this.chart;
-    var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=' + sensor.substring(1, sensor.length) + '&secondsFrame=86400&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
-    console.log(cadena)
+    var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=' + sensor.substring(1, sensor.length) + '&secondsFrame=120&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
     let res = await fetch(cadena)
     let data = await res.json()
 
-		this.setState({ data })
-		datos = data
-    console.log(data)
+    const socket = socketIOClient(this.state.endpoint, {"forceNew": true});
+      socket.emit('subscribe', 'ffffffff-e16c-f9c0-0000-000075b319f8')
+      socket.on("message", (message) => {
+        if ( message.sensor == "battery" ) {
+          var aux = this.state.dataPoints
+          var auxData = JSON.parse(message.data)
+          aux.push({ x: new Date(message.timestamp), y: parseInt(auxData.proximity) })
+
+          this.setState({ dataPoints: aux })
+          chart.render();
+        }
+     });
+
+     this.setState({ data })
+    datos = data
+    var aux = []
     data.map((da) => {
-      console.log(da)
-      dataPoints.push({
+      aux.push({
         x: new Date(da["timestamp"]),
         y: da["proximity"]
       })
     })
+    this.setState({ dataPoints: aux })
     chart.render();
   }
 
@@ -155,7 +170,7 @@ class Graphic extends Component {
                 type: "stepLine",
                 xValueFormatString: "hh:mm:ss",
                 markerSize: 7,
-                dataPoints: dataPoints
+                dataPoints: this.state.dataPoints
         }]
   }
       

@@ -8,24 +8,31 @@ import socketIOClient from "socket.io-client";
 
 var datos = [];
 class Graphics extends Component {
-    state = {
-      mydata: [],
-      sensors: [],
-      response: false,
-      endpoint: "http://178.62.241.158:3000"
+    constructor(props) {
+      super(props)
+      this.state = {
+        mydata: [],
+        sensors: [],
+        response: false,
+        endpoint: "http://178.62.241.158:3000"
+      }
     }
+    
 
     componentDidMount() {
-      fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=00000000-5561-036d-0000-000075b319f8')
+      fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=ffffffff-e16c-f9c0-0000-000075b319f8')
       .then(res => res.json())
       .then((data) => {
         this.setState({ sensors: data })
       })
       .catch(console.log)
 
-      const socket = socketIOClient(this.state.endpoint, {"forceNew": true});
-      socket.emit('subscribe', '00000000-5561-036d-0000-000075b319f8')
-      socket.on("message", data => this.state({ sensors: data} ));
+      const socket = socketIOClient("http://178.62.241.158:3000", {"forceNew": true});
+      socket.emit('subscribe', 'ffffffff-e16c-f9c0-0000-000075b319f8')
+      socket.on("message", (message) => { 
+        console.log(message.data);
+        this.setState({ data: message.data })
+      });
     }
   
     render() {
@@ -124,7 +131,6 @@ class Graphic extends Component {
   
   async componentDidMount() {
     var sensor = this.props.sensor
-    console.log(sensor)
     var chart = this.chart;
     var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=' + sensor.substring(1, sensor.length) + '&secondsFrame=46400&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
     let res = await fetch(cadena)

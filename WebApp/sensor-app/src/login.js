@@ -1,10 +1,4 @@
 import React, { Component } from 'react';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link
-} from "react-router-dom";
 
 import Sensors from './sensors.js';
 import Clients from './clients.js';
@@ -51,7 +45,7 @@ class Login extends Component {
     (async () => {
       const rawResponse = await fetch('http://178.62.241.158:3000/chooseDevice', {
         method: 'POST',
-        body: JSON.stringify({deviceId: '00000000-5561-036d-0000-000075b319f8'})
+        body: JSON.stringify({deviceId: 'ffffffff-e16c-f9c0-0000-000075b319f8'})
       });
       const content = await rawResponse;
     

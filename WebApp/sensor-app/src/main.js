@@ -74,7 +74,6 @@ class Status extends Component {
 			let data = await res.json()
 
 			this.setState({ status: data[0] })
-			console.log(data)
 	}
 
 	render() {
@@ -104,9 +103,7 @@ class History extends Component {
 			let data = await res.json()
 
 			this.setState({ status: data[0] })
-			console.log(data)
 			fecha = new Date(this.state.status["timestamp"])
-			console.log(fecha.toString())
 			fecha = fecha.getHours() + ":" + fecha.getMinutes() + ":" + fecha.getSeconds() + " | " + fecha.getDate() + "/" + (fecha.getMonth()+1) + "/" + fecha.getFullYear()
 	}
 
@@ -131,7 +128,6 @@ class Device extends Component {
 			let data = await res.json()
 
 			this.setState({ status: data[0] })
-			console.log(data)
 			device = this.state.status["device"].substring(24, this.state.status["device"].length)
 	}
 
@@ -154,14 +150,13 @@ class Main extends Component {
 		.then((data) => {
 		  this.setState({ sensors: data })
 		})
-				.catch(console.log)
+		.catch(console.log)
 				
-				var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=accelerometer&secondsFrame=60&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
-				console.log(cadena)
-				let res = await fetch(cadena)
-				let data = await res.json()
+		var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=accelerometer&secondsFrame=60&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+		let res = await fetch(cadena)
+		let data = await res.json()
 
-				datos = data
+		datos = data
 	}
 
 	render() {
