@@ -286,7 +286,7 @@ function parseReceivedCollection(sensor, data){
         }
 
         // Distribute data
-        distributeDataRealTime(json.device, sensor, data);
+        distributeDataRealTime(json.device, sensor, json);
     });
 }
 
@@ -325,9 +325,12 @@ module.exports.configureEmitter = configureEmitter;
  */
 function distributeDataRealTime(device, sensor, data){
 
+    var dataJSON = JSON.parse(data);
+
     var values = {
         "sensor": sensor, 
-        "data": data
+        "data": data,
+        "timestamp": new Date(parseInt(dataJSON.timestamp)).toString()
     }
 
     emitMessage(device, values);
