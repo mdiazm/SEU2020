@@ -341,7 +341,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                             g.setX(Float.parseFloat(x));
                             g.setY(Float.parseFloat(y));
                             g.setZ(Float.parseFloat(z));
-                            g.setTimestamp((timestamp));
+                            g.setTimestamp(timestamp);
 
                             arrayList.set(0, g);
                             try {
@@ -445,7 +445,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
                 for(Location location: locationResult.getLocations()){
                     String device = getDevice();
-                    String timestamp = new Date(location.getTime()).toString();
+                    String timestamp = location.getTime() + "";
                     String latitude = location.getLatitude() + "";
                     String longitude = location.getLongitude() + "";
                     String bearing = location.getBearing() + "";
@@ -486,7 +486,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     public void onSuccess(Location location) {
                         if (location != null) {
                             String device = getDevice();
-                            String timestamp = "";//new Date(location.getTime()).toString();
+                            String timestamp = location.getTime() + "";
                             String latitude = location.getLatitude() + "";
                             String longitude = location.getLongitude() + "";
                             String bearing = location.getBearing() + "";
@@ -555,7 +555,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                 (Math.abs(g.getX() - Float.parseFloat(lux)) > g.getOffset()) &&
                         differencia > 1000) {
                             g.setX(Float.parseFloat(lux));
-                            g.setTimestamp((timestamp));
+                            g.setTimestamp(timestamp);
 
 
 
@@ -1122,7 +1122,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public void onLocationChanged(Location location) {
         if (location != null) {
             String device = getDevice();
-            String timestamp = new Date(location.getTime()).toString();
+            String timestamp = location.getTime() + "";
+            String date = new Date(location.getTime()).toString();
             String latitude = location.getLatitude() + "";
             String longitude = location.getLongitude() + "";
             String bearing = location.getBearing() + "";
@@ -1135,7 +1136,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 if (arrayList.get(i) instanceof com.seu.sensors.Sensors.Locations) {
                     com.seu.sensors.Sensors.Locations g = (com.seu.sensors.Sensors.Locations) arrayList.get(i);
 
-                    g.setTimestamp((timestamp));
+                    g.setTimestamp(timestamp);
                     g.setAccuracy(Float.parseFloat(accuracy));
                     g.setAltitude(Float.parseFloat(altitude));
                     g.setBearing(Float.parseFloat(bearing));
