@@ -14,7 +14,7 @@ class BatteryInfo extends Component {
 	}
 
 	async componentDidMount() {
-		var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=battery&secondsFrame=120&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+		var cadena = 'http://localhost/getLastRecordsInFrame?sensorName=battery&secondsFrame=120&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
 
 		let res = await fetch(cadena)
 		let data = await res.json()
@@ -45,7 +45,7 @@ class LightInfo extends Component {
 	}
 
 	async componentDidMount() {
-			var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=light&secondsFrame=1&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+			var cadena = 'http://localhost/getLastRecordsInFrame?sensorName=light&secondsFrame=1&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
 
 			let res = await fetch(cadena)
 			let data = await res.json()
@@ -68,7 +68,7 @@ class Status extends Component {
 	}
 
 	async componentDidMount() {
-			var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=status&secondsFrame=1&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+			var cadena = 'http://localhost/getLastRecordsInFrame?sensorName=status&secondsFrame=1&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
 
 			let res = await fetch(cadena)
 			let data = await res.json()
@@ -97,7 +97,7 @@ class History extends Component {
 	}
 
 	async componentDidMount() {
-			var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=status&secondsFrame=1&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+			var cadena = 'http://localhost/getLastRecordsInFrame?sensorName=status&secondsFrame=1&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
 
 			let res = await fetch(cadena)
 			let data = await res.json()
@@ -122,7 +122,7 @@ class Device extends Component {
 	}
 
 	async componentDidMount() {
-			var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=status&secondsFrame=1&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+			var cadena = 'http://localhost/getLastRecordsInFrame?sensorName=status&secondsFrame=1&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
 
 			let res = await fetch(cadena)
 			let data = await res.json()
@@ -145,14 +145,14 @@ class Main extends Component {
 	}
 
 	async componentDidMount() {
-		fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=ffffffff-e16c-f9c0-0000-000075b319f8')
+		fetch('http://localhost/getAvailableSensors?deviceId=ffffffff-e16c-f9c0-0000-000075b319f8')
 		.then(res => res.json())
 		.then((data) => {
 		  this.setState({ sensors: data })
 		})
 		.catch(console.log)
 				
-		var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=accelerometer&secondsFrame=60&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+		var cadena = 'http://localhost/getLastRecordsInFrame?sensorName=accelerometer&secondsFrame=60&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
 		let res = await fetch(cadena)
 		let data = await res.json()
 

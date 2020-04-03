@@ -11,7 +11,7 @@ class Map extends Component {
 	}
 
 	async componentDidMount() {
-		fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=ffffffff-e16c-f9c0-0000-000075b319f8')
+		fetch('http://localhost/getAvailableSensors?deviceId=ffffffff-e16c-f9c0-0000-000075b319f8')
 		.then(res => res.json())
 		.then((data) => {
 		  this.setState({ sensors: data })

@@ -20,7 +20,7 @@ class Battery extends Component {
     }
   
     componentDidMount() {
-      fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=ffffffff-e16c-f9c0-0000-000075b319f8')
+      fetch('http://localhost/getAvailableSensors?deviceId=ffffffff-e16c-f9c0-0000-000075b319f8')
       .then(res => res.json())
       .then((data) => {
         this.setState({ sensors: data })
@@ -132,7 +132,7 @@ class Graphic extends Component {
   async componentDidMount() {
     const sensor = this.props.sensor;
     var chart = this.chart;
-    var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=' + sensor.substring(1, sensor.length) + '&secondsFrame=120&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+    var cadena = 'http://localhost/getLastRecordsInFrame?sensorName=' + sensor.substring(1, sensor.length) + '&secondsFrame=120&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
     let res = await fetch(cadena)
     let data = await res.json()
 

@@ -9,7 +9,7 @@ class Login extends Component {
     super(props);
     this.state = {value: '', clients: [], sensors: []};
 
-    fetch('http://178.62.241.158:3000/getAvailableClients', {
+    fetch('http://localhost/getAvailableClients', {
       headers: {
         withCredentials:true
       }
@@ -27,7 +27,7 @@ class Login extends Component {
 
   handleClick(e) {
     e.preventDefault();
-    fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=s%3AS_-hcCGMhPWagoZjD0WUd7VVEhaRFw00.M8zDDgCpVSTL1LEIjU90RhvImg1JpuaEu6JwHwq2XdY', {
+    fetch('http://localhost/getAvailableSensors?deviceId=s%3AS_-hcCGMhPWagoZjD0WUd7VVEhaRFw00.M8zDDgCpVSTL1LEIjU90RhvImg1JpuaEu6JwHwq2XdY', {
         headers: {
           //withCredentials:true
         }
@@ -43,7 +43,7 @@ class Login extends Component {
     data.preventDefault();
 
     (async () => {
-      const rawResponse = await fetch('http://178.62.241.158:3000/chooseDevice', {
+      const rawResponse = await fetch('http://localhost/chooseDevice', {
         method: 'POST',
         body: JSON.stringify({deviceId: 'ffffffff-e16c-f9c0-0000-000075b319f8'})
       });
