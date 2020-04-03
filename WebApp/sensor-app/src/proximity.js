@@ -4,6 +4,8 @@ import CanvasJSReact from './assets/canvasjs.react';
 import Sensors from './sensors.js';
 import { TableLightValue } from './tables.js';
 
+import socketIOClient from "socket.io-client";
+
 var datos = []
 class Proximity extends Component {
     state = {
@@ -12,12 +14,16 @@ class Proximity extends Component {
     }
   
     componentDidMount() {
-          fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=00000000-5561-036d-0000-000075b319f8')
-          .then(res => res.json())
-          .then((data) => {
-            this.setState({ sensors: data })
-          })
-          .catch(console.log)
+      fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=00000000-5561-036d-0000-000075b319f8')
+      .then(res => res.json())
+      .then((data) => {
+        this.setState({ sensors: data })
+      })
+      .catch(console.log)
+
+      const socket = socketIOClient(this.state.endpoint, {"forceNew": true});
+      socket.emit('subscribe', '00000000-5561-036d-0000-000075b319f8')
+      socket.on("message", data => this.state({ sensors: data} ));
     }
   
     render() {
@@ -143,7 +149,7 @@ class Graphic extends Component {
 				title: "Hora"
 			},
 			axisY: {
-				title: "Luminosidad"
+				title: "Proximidad"
 			},
       data: [{				
                 type: "stepLine",

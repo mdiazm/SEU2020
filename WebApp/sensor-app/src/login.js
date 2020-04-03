@@ -51,7 +51,6 @@ class Login extends Component {
     (async () => {
       const rawResponse = await fetch('http://178.62.241.158:3000/chooseDevice', {
         method: 'POST',
-        //withCredentials:true,
         body: JSON.stringify({deviceId: '00000000-5561-036d-0000-000075b319f8'})
       });
       const content = await rawResponse;
@@ -83,10 +82,9 @@ class Login extends Component {
                   </select>
                 </div>
                 <div class="form-group">
-                  <button class="btn btn-primary btn-block" type="submit">Consultar</button>
+                  <a class="btn btn-primary btn-block" href="/app">Consultar</a>
                 </div>
             </form>
-            <button class="btn btn-primary btn-block" onClick={this.handleClick}>CARGAR</button>
         </div>
       )
   }

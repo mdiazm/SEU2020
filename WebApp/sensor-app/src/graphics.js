@@ -4,13 +4,17 @@ import CanvasJSReact from './assets/canvasjs.react';
 import Sensors from './sensors.js';
 import { TableCoordinates } from './tables.js';
 
+import socketIOClient from "socket.io-client";
+
 var datos = [];
 class Graphics extends Component {
     state = {
       mydata: [],
-      sensors: []
+      sensors: [],
+      response: false,
+      endpoint: "http://178.62.241.158:3000"
     }
-  
+
     componentDidMount() {
       fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=00000000-5561-036d-0000-000075b319f8')
       .then(res => res.json())
@@ -18,6 +22,10 @@ class Graphics extends Component {
         this.setState({ sensors: data })
       })
       .catch(console.log)
+
+      const socket = socketIOClient(this.state.endpoint, {"forceNew": true});
+      socket.emit('subscribe', '00000000-5561-036d-0000-000075b319f8')
+      socket.on("message", data => this.state({ sensors: data} ));
     }
   
     render() {
@@ -118,7 +126,7 @@ class Graphic extends Component {
     var sensor = this.props.sensor
     console.log(sensor)
     var chart = this.chart;
-    var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=' + sensor.substring(1, sensor.length) + '&secondsFrame=86400&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
+    var cadena = 'http://178.62.241.158:3000/getLastRecordsInFrame?sensorName=' + sensor.substring(1, sensor.length) + '&secondsFrame=46400&deviceId=ffffffff-e16c-f9c0-0000-000075b319f8';
     let res = await fetch(cadena)
     let data = await res.json()
 
@@ -157,16 +165,19 @@ class Graphic extends Component {
       data: [{				
           type: "line",
           xValueFormatString: "h:m:s",
+          toolTipContent: "X => {x}: {y}",
           dataPoints: dataPoints
         },
         {
           type: "line",
           xValueFormatString: "h:m:s",
+          toolTipContent: "Y => {x}: {y}",
           dataPoints: dataPointsY
         },
         {
           type: "line",
           xValueFormatString: "h:m:s",
+          toolTipContent: "Z => {x}: {y}",
           dataPoints: dataPointsZ
         }
       ]

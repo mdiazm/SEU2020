@@ -13,6 +13,7 @@ import Graphic from './graphics.js';
 import Light from './light.js';
 import Battery from './battery.js';
 import Proximity from './proximity.js';
+import Map from './map.js';
 
 import './assets/bootstrap/css/bootstrap.min.css';
 import './assets/css/styles.min.css';
@@ -47,6 +48,9 @@ class App extends Component {
           </Route>
           <Route exact path="/battery">
             <Battery />
+          </Route>
+          <Route exact path="/map">
+            <Map />
           </Route>
         </Switch>
       </Router>

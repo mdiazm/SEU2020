@@ -5,20 +5,28 @@ import CanvasJSReact from './assets/canvasjs.react';
 import Sensors from './sensors.js';
 import { TableLightValue } from './tables.js';
 
+import socketIOClient from "socket.io-client";
+
 var datos = []
 class Battery extends Component {
     state = {
       mydata: [],
-      sensors: []
+      sensors: [],
+      response: false,
+      endpoint: "http://178.62.241.158:3000"
     }
   
     componentDidMount() {
-          fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=00000000-5561-036d-0000-000075b319f8')
-          .then(res => res.json())
-          .then((data) => {
-            this.setState({ sensors: data })
-          })
-          .catch(console.log)
+      fetch('http://178.62.241.158:3000/getAvailableSensors?deviceId=00000000-5561-036d-0000-000075b319f8')
+      .then(res => res.json())
+      .then((data) => {
+        this.setState({ sensors: data })
+      })
+      .catch(console.log)
+      
+      const socket = socketIOClient(this.state.endpoint, {"forceNew": true});
+      socket.emit('subscribe', '00000000-5561-036d-0000-000075b319f8')
+      socket.on("message", data => this.state({ sensors: data} ));
     }
   
     render() {
@@ -97,6 +105,7 @@ class Battery extends Component {
               <script src="./assets/js/bs-init.js"></script>
               <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
               <script src="./assets/js/theme.js"></script>
+              <script src="./assets/js/socket.io.js"></script>
           </main>
       )
     }
