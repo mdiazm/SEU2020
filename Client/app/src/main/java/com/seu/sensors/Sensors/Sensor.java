@@ -9,12 +9,11 @@ import com.aware.Aware;
 public class Sensor {
 
     private String name; ///> Nombre del sensor
-    private boolean state; ///> Estado del sensor
+    public boolean state; ///> Estado del sensor
     private int image; ///> Imagen del sensor
     private String key; ///> Clave del sensor
 
     Context context; ///> Contexto
-
     /**
      * Constructor parametrizado
      * @param c
@@ -29,6 +28,7 @@ public class Sensor {
         this.image = image;
         this.context = c;
         this.key = key;
+
     }
 
     /**
@@ -67,7 +67,8 @@ public class Sensor {
             }else if(name == "Batería"){
                 Aware.startBattery(context);
             }else if(name == "GPS"){
-                Aware.startLocations(context);
+              //  loc.getLastLocation();
+               // Aware.startLocations(context);
             }else if(name == "Proximidad"){
                 Aware.startProximity(context);
             }else if(name == "Barómetro"){
@@ -86,7 +87,8 @@ public class Sensor {
             }else if(name == "Batería"){
                 Aware.stopBattery(context);
             }else if(name == "GPS"){
-                Aware.stopLocations(context);
+                //loc.removeLocationUpdates();
+               // Aware.stopLocations(context);
             }else if(name =="Proximidad"){
                 Aware.stopProximity(context);
             }else if(name == "Barómetro"){

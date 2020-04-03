@@ -1,8 +1,9 @@
 package com.seu.sensors.Sensors;
 
 import android.content.Context;
-
-import java.util.Date;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.util.Log;
 
 public class Locations extends Sensor {
 
@@ -15,10 +16,26 @@ public class Locations extends Sensor {
     private float altitude;
     private float accuracy;
     private float offset;
-    public Locations(String name, boolean state, int image, String key, Context c){
-        super(name, state, image, key, c);
+    private LocationManager locationManager;
+    private static final int LOCATION_REFRESH_TIME = 5000; ///< Minimum time interval between changes
+    private static final int LOCATION_REFRESH_DISTANCE = 5; ///< Minimum distance interval between changes
 
+    public Locations(String name, boolean state, int image, String key, Context c, LocationManager locationManager){
+        super(name, state, image, key, c);
+        this.locationManager = locationManager;
+        try {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                    LOCATION_REFRESH_TIME,
+                    LOCATION_REFRESH_DISTANCE,
+                    (LocationListener) context);
+        } catch(SecurityException e){
+            Log.e("gps", "No hay permisos para obtener la localización");
+        } catch (IllegalArgumentException ie){
+            Log.e("gps", "No hay un proveedor para el GPS");
+        }
     }
+
+
 
     @Override
     public void setContext(Context context) {
@@ -37,7 +54,29 @@ public class Locations extends Sensor {
 
     @Override
     public void setState(boolean state) {
-        super.setState(state);
+
+        if(state == false) {
+            if (locationManager != null) {
+                locationManager.removeUpdates((LocationListener) context);
+            }
+        }else{
+            // Register location manager
+            //locationManager = (LocationManager) context.getSystemService(context.LOCATION_SERVICE);
+
+            // Listen for location changes
+            try {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                        LOCATION_REFRESH_TIME,
+                        LOCATION_REFRESH_DISTANCE,
+                        (LocationListener) context);
+            } catch(SecurityException e){
+                Log.e("gps", "No hay permisos para obtener la localización");
+            } catch (IllegalArgumentException ie){
+                Log.e("gps", "No hay un proveedor para el GPS");
+            }
+        }
+        super.state = state;
+
     }
 
     @Override

@@ -29,7 +29,7 @@ public class MQTT implements MqttCallback {
      */
     public MQTT(String ip) {
         this.ip = ip;
-
+        connected = false;
         send_topic = "sensors/send/";
         this.register_topic = "sensors/register";
         this.collection_topic = "sensors/collection/";
@@ -52,7 +52,7 @@ public class MQTT implements MqttCallback {
                 Log.d("MQTT", "conectando");
                 client.connect();
                 send_topic = "sensors/send/";
-                client.subscribe(send_topic);
+                //client.subscribe(send_topic);
                 connected = true;
                 return true;
             } catch (MqttException e) { ///> No ha sido posible conectar
@@ -183,6 +183,7 @@ public class MQTT implements MqttCallback {
         return connected;
     }
 
+
     /**
      * Método para registrar un dispositivo en MongoDB mediante MQTT.
      *
@@ -225,6 +226,7 @@ public class MQTT implements MqttCallback {
      * Método para desconectar del broker MQTT.
      */
     public void disconnect() {
+
         try {
             client.disconnect();
             connected = false;

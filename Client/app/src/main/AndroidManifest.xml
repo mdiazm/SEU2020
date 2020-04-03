@@ -9,9 +9,9 @@
     <permission android:name="com.aware.READ_CONTEXT_DATA" android:description="@string/read_permission" android:icon="@drawable/ic_launcher_settings" android:label="Read AWARE's Context data" android:protectionLevel="normal" />
     <permission android:name="com.aware.WRITE_CONTEXT_DATA" android:description="@string/write_permission" android:icon="@drawable/ic_launcher_settings" android:label="Write to AWARE's Context data" android:protectionLevel="normal" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <application
         android:allowBackup="true"
