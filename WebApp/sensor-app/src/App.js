@@ -1,38 +1,59 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route
+} from "react-router-dom";
 
-import 'bootstrap/dist/css/bootstrap.min.css';
-import CanvasJSReact from './assets/canvasjs.react';
+import Main from './main.js';
+import Login from './login.js';
+import Graphic from './graphics.js';
+import Light from './light.js';
+import Battery from './battery.js';
+import Proximity from './proximity.js';
+import Map from './map.js';
 
-var CanvasJS = CanvasJSReact.CanvasJS;
-var CanvasJSChart = CanvasJSReact.CanvasJSChart;
+import './assets/bootstrap/css/bootstrap.min.css';
+import './assets/css/styles.min.css';
+import './assets/css/custom.css';
+import './assets/css/Features-Blue.css';
+import './assets/css/Login-Form-Dark.css';
+import './assets/fonts/ionicons.min.css';
+import './assets/fonts/fontawesome-all.min.css';
 
 class App extends Component {	
   render() {
-    const options = {
-      title: {
-        text: "Basic Column Chart in React"
-      },
-      data: [{				
-                type: "column",
-                dataPoints: [
-                    { label: "Apple",  y: 10  },
-                    { label: "Orange", y: 15  },
-                    { label: "Banana", y: 25  },
-                    { label: "Mango",  y: 30  },
-                    { label: "Grape",  y: 28  }
-                ]
-       }]
-   }
-		
-   return (
-      <div>
-        <CanvasJSChart options = {options}
-            /* onRef = {ref => this.chart = ref} */
-        />
-      </div>
-    );
+    return(
+      <Router>
+        <Switch>
+          <Route exact path="/">
+            <Login />
+          </Route>
+          <Route exact path="/app">
+            <Main />
+          </Route>
+          <Route exact path="/gyroscope">
+            <Graphic sensor="/gyroscope" />
+          </Route>
+          <Route exact path="/proximity">
+            <Proximity />
+          </Route>
+          <Route exact path="/Accelerometer">
+            <Graphic />
+          </Route>
+          <Route exact path="/light">
+            <Light />
+          </Route>
+          <Route exact path="/battery">
+            <Battery />
+          </Route>
+          <Route exact path="/map">
+            <Map />
+          </Route>
+        </Switch>
+      </Router>
+    )
   }
 }
 
