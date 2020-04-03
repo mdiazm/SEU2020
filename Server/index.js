@@ -175,7 +175,9 @@ app.get("/getDataOnDate", (req, res) => {
     }
 })
 
-// Create sockets to receive updates in real time.
+/**
+ * Create sockets to receive updates in real time.
+ *  */ 
 io.on('connection', (socket) =>{
     console.log("Someone connected to this socket: " + socket.id);
 
